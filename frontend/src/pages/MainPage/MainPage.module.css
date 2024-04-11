@@ -1,0 +1,29 @@
+.mainPageContainer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+
+.bannerContainer{
+    width: 100%;
+    position: relative;
+}
+
+.imageWrapper{
+    height: 800px;
+    width: 100%;
+    background-image: url('@assets/banner.jpg');
+    background-repeat: no-repeat;
+    background-position: center center;
+    background-size: cover;
+}
+
+.bottomWave{
+    position: absolute;
+    bottom: 0;
+}
+
+.pageContent{
+    width: 100%;
+}

@@ -1,0 +1,54 @@
+.tripContainer{
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+    border: 1.5px solid #A6A6A6;
+    border-radius: 3px;
+    margin-top: 10px;
+}
+
+.headerSection{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-evenly;
+}
+
+.arrow{
+    width: 7%;
+    height: 7%;
+}
+
+.placeName{
+    font-size: large;
+    font-weight: bold;
+    margin: 0;
+}
+
+.placeAddress{
+    margin: 0;
+}
+
+.infoSection{
+    margin-top: 16px;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+}
+
+.infoBlock{
+    display: flex;
+    flex-direction: row;
+}
+
+.infoTitle{
+    margin: 0 10px 0 0;
+}
+
+.infoDescription {
+    margin: 0;
+}
+
+.button{
+    width: fit-content;
+    margin: 10px 10px 0 auto;
+}

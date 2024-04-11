@@ -1,0 +1,37 @@
+.placeContainer{
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+    border: 1.5px solid #A6A6A6;
+    border-radius: 3px;
+}
+
+.name{
+    margin:0;
+    font-size: large;
+    font-weight: bold;
+}
+
+.address{
+    margin: 0;
+}
+
+.location{
+    margin-bottom: 0;
+    color: #5B5B5B;
+}
+
+.iconsSection{
+    margin-left: auto;
+    display: flex;
+}
+
+.editIcon{
+    margin-right: 5px;
+}
+
+.editIcon, .deleteIcon{
+    width: 1.5rem;
+    height: 1.5rem;
+    cursor: pointer;
+}

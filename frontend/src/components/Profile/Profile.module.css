@@ -1,0 +1,125 @@
+.mainContainer {
+    padding: 4%;
+    display: flex;
+    flex-direction: column;
+}
+
+.headerSection {
+    display: flex;
+    width: 100%;
+    align-items: center;
+}
+
+.title {
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.filtersContainer {
+    display: flex;
+    flex-direction: row;
+    margin-left: auto;
+}
+
+.filterContainer {
+    display: flex;
+    margin: 0 5px 0 5px;
+}
+
+.pagination {
+    align-self: center;
+    margin-top: 16px;
+}
+
+.form {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    column-gap: 100px;
+    row-gap: 20px;
+}
+
+.form input {
+    max-width: 100% !important;
+}
+
+.phone {
+    display: flex;
+    flex-direction: row;
+    gap: 15px;
+    margin-top: 25px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.phone div {
+    margin: 0;
+}
+
+.prefix {
+    width: 33%;
+}
+
+.mainInfo {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    box-sizing: border-box;
+    align-items: center;
+    justify-content: center;
+}
+
+.mainInfo img {
+    border-radius: 100%;
+    width: 20vw;
+    aspect-ratio: 1/1;
+    object-fit: cover;
+    object-position: 0 50;
+}
+
+.aditionalInfo {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    box-sizing: border-box;
+    align-items: center;
+    justify-content: center;
+}
+
+.buttonContainer {
+    column-span: span 2;
+}
+
+.buttonWrapper {
+    grid-column: span 2;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+}
+
+.errorMessage {
+    grid-column: span 2;
+    color: red;
+    text-align: center;
+}
+
+@media (max-aspect-ratio: 1/1) {
+    .filtersContainer {
+        margin-left: 0;
+    }
+    .form {
+        display: flex;
+        flex-direction: column;
+    }
+    .mainInfo img {
+        width: 80%;
+    }
+}
+
+@media (max-aspect-ratio: 1/1) {
+    .headerSection {
+        flex-direction: column;
+        margin-bottom: 16px;
+    }
+}

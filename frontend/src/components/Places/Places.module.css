@@ -1,0 +1,80 @@
+.mainContainer{
+    padding: 4%;
+    display: flex;
+    flex-direction: column;
+}
+
+.headerSection{
+    display: flex;
+    width: 100%;
+    align-items: center;
+}
+
+.title{
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.filtersContainer{
+    display: flex;
+    flex-direction: row;
+    margin-left: auto;
+}
+
+.filterContainer{
+    display: flex;
+    margin: 0 5px 0 5px;
+}
+
+.placesContainer{
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+}
+
+.pagination{
+    align-self: center;
+    margin-top: 16px;
+}
+
+.editPlace{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.updateButton{
+    margin-top: 16px;
+}
+
+.createDescription{
+    margin: 0;
+}
+
+.newButton {
+    margin-left: 20px;
+}
+
+.inputSelect {
+    margin-top: 25px;
+}
+
+@media (max-aspect-ratio: 1/1) {
+    .filtersContainer {
+        margin-left: 0;
+    }
+
+    .placesContainer{
+        grid-template-columns: repeat(1, 1fr);
+    }
+
+    .headerSection {
+        flex-direction: column;
+        margin-bottom: 16px;
+    }
+
+    .newButton {
+        margin-bottom: 20px;
+        margin-left: 0;
+    }
+}

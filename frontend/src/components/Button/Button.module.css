@@ -1,0 +1,85 @@
+.button {
+  border-radius: 8px;
+  padding: 10px 15px;
+  outline: none;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  height: fit-content;
+}
+
+.button:disabled, .button:disabled:hover {
+  background-color: #e5e5e5 !important;
+  color: gray !important;
+  cursor: not-allowed;
+}
+
+.button:not(:disabled):focus {
+  outline: none;
+}
+
+.button:not(:disabled):hover {
+  opacity: 0.7;
+}
+
+.button {
+  background-color: #2b2b2b;
+  color: white;
+}
+
+.button:active {
+  background-color: #425775;
+}
+
+
+/* Boton rojo sin fondo */
+
+.button.emptyRed {
+  color: rgb(144, 10, 0);
+  background-color: #e5e5e5;
+}
+
+.button.emptyRed:hover {
+  color: rgb(255, 46, 31);
+}
+
+/* Botón rojo con fondo */
+.button.red {
+  background-color: #da1212;
+}
+
+.button.red:hover {
+  background-color: #eb3939;
+}
+
+.button.red:active {
+  background-color: #c01b1b;
+}
+
+
+.button.green {
+  background-color: #068b06;
+  color: white;
+}
+
+.button.emptyBlue {
+  color: #16337F;
+  background-color: #e5e5e5;
+}
+
+.button.button.emptyBlue:hover {
+  color: #1d45ac;
+}
+.button.emptyBlack {
+  color: #2b2b2b;
+  border: 1.5px solid #A6A6A6;
+  border-radius: 3px;
+  font-family: 'Montserrat';
+  background-color: #ffffff;
+  font-size: 15px;
+  padding: 10px;
+}
+
+.button.button.emptyBlack:hover {
+  color: #363535;
+}

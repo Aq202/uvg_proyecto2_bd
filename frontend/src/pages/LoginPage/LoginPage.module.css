@@ -1,0 +1,205 @@
+.loginPageContainer{
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    width: 100%;
+    height: 100%;
+    min-height: 700px;
+    position: relative;
+}
+
+.headerContainer{
+    width: 100vw;
+}
+
+
+.formContainer{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    position: relative;
+    background-color: #ffffff;
+    width: calc(40vw - 20vh);
+    max-width: 600px;
+    min-height: 700px;
+    min-width: 330px;
+}
+
+@media (min-aspect-ratio: 1/1){
+
+    .logoMobile{
+        display: none;
+    }
+
+    .bottomWaveWrapper{
+        display: none;
+    }
+
+    .backgroundWrapper{
+        position: absolute;
+        z-index: -5;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-repeat: no-repeat;
+        background-position: right center;
+        background-size: cover;
+    }
+
+    .backgroundWrapper::before{
+        content: "";
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        background-color: rgb(43, 43, 43,0.55);
+    }
+
+    .wave{
+        display: none;
+    }
+    
+    .waveBody{
+        display: none;
+    }
+}
+
+@media (max-aspect-ratio: 1/1){
+
+    .wavesWrapper{
+        display: none;
+    }
+
+    .bottomWaveWrapper{
+        display: none;
+    }
+
+    .loginPageContainer{
+        align-items: center;
+        justify-content: center;
+        align-content: center;
+        flex-direction: column;
+        position: relative;
+    }
+
+    .formContainer{
+        height: 80%;
+        width: 80%;
+        padding: 0 0 30px 0;
+        border-radius: 7px;
+    }
+
+    .logo{
+        display: none;
+    }
+
+    .logoMobile{
+        width: 250px;
+        height: 77.65px;
+        margin: 35px;
+    }
+
+    .backgroundWrapper{
+       display: none;
+    }
+}
+
+.wavesWrapper{
+    height: 100%;
+    max-width: 20%;
+    z-index: 4;
+    overflow: hidden;
+    min-height: 700px;
+    margin-left: -5px;
+}
+
+.waves{
+    height: 100%;
+}
+
+.form{
+    width: 80%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+}
+
+
+.buttonWrapper{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    margin-top: 40px;
+}
+
+.infoSpan{
+    color: #565656;
+    margin-top: 20px;
+    text-align: center;
+}
+
+.newAccount{
+    margin-top: 20px;
+    text-align: center;
+}
+
+.signUp{
+    margin-left: 5px;
+    color: #565656;
+    cursor: pointer;
+    text-align: center;
+}
+
+.signUp:hover{
+    color: #2B2B2B;
+}
+
+.logo{
+    width: 250px;
+    height: auto;
+    margin: 35px;
+    margin-top: 70px;
+    margin-bottom: 0;
+}
+
+.errorMessage{
+    margin-top: 20px;
+    color:var(--error-color--);
+    text-align: center;
+}
+
+.waveBody{
+    height: 2vh;
+    background-color: var(--blue-theme-color--);
+}
+  
+@media only screen and (min-height: 770px){
+
+    .bottomWaveWrapper{
+        display: block;
+    }
+
+    .waveBody{
+      height: 3vh;
+      width: 100%;
+      margin-top: -10px;
+    }
+}
+  
+
+.wave{
+    width: 100%;
+}
+
+.bottomWaveWrapper{
+    width: 100vw;
+    height: min-content;
+    position: absolute;
+    bottom: 0;
+}
+
