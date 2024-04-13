@@ -29,12 +29,6 @@ type AppLocation = {
 	idUser: String;
 };
 
-type Vehicle = {
-	type: string;
-	identification: string;
-	color: string;
-};
-
 type Ride = {
 	id: string;
 	startLocation: AppLocation | string;
@@ -46,4 +40,20 @@ type Ride = {
 	vehicle: Vehicle;
 	isPassenger?: boolean;
 	isDriver?: boolean;
+};
+
+type OwnsRelation = {
+	since: Date | string;
+	stillOwner: boolean;
+	price: number;
+};
+
+type Vehicle = {
+	type: string;
+	identification: string;
+	color: string;
+	brand?: string;
+	model?: string;
+	year?: number;
+	relation?: OwnsRelation;
 };

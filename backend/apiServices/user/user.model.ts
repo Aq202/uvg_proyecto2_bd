@@ -97,8 +97,7 @@ const authenticate = async ({
 
 	if(result.records.length === 0) throw new CustomError("Usuario o contraseña incorrectos.", 401);
 
-
-	const {id, name, phone, gender} = result.records[0].get("user");
+	const {id, name, phone, gender} = result.records[0].get("user").properties;
 	
 	await session.close();
 
