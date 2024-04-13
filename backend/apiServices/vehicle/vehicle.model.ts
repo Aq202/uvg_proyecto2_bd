@@ -16,7 +16,7 @@ const createVehicle = async ({
 		` MATCH (u:User {id:$userId})
       MERGE (v:Vehicle {type:$type, identification:$identification, color:$color, brand:$brand,
       model:$model, year:$year })
-      MERGE (u)-[:Owns {since:$since, still_owner:$stillOwner, price:$price}]->(v)
+      MERGE (u)-[:owns {since:$since, stillOwner:$stillOwner, price:$price}]->(v)
       RETURN v`,
 		{
 			type,

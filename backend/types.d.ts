@@ -36,9 +36,9 @@ type AppLocation = {
 	openTime: string;
 	closeTime: string;
 	city:City;
-	distance_from_city_center: string;
-	danger_area: boolean;
-	urban_area: boolean;
+	distanceFromCityCenter: string;
+	dangerArea: boolean;
+	urbanArea: boolean;
 } | {
 	id: ObjectId;
 	name: String;

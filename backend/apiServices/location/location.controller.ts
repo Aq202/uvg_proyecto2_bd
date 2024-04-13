@@ -1,15 +1,21 @@
 import CustomError from "../../utils/customError.js";
 import errorSender from "../../utils/errorSender.js";
 import exists from "../../utils/exists.js";
-import { createCity, createLocation, deleteLocation, getCities, getCountries, getLocations, updateLocation } from "./location.model.js";
-
+import {
+	createCity,
+	createLocation,
+	deleteLocation,
+	getCities,
+	getCountries,
+	getLocations,
+	updateLocation,
+} from "./location.model.js";
 
 const createCityController = async (req: AppRequest, res: AppResponse) => {
 	const { name, longitude, latitude, country } = req.body;
 
 	try {
-		
-		const location = await createCity({name, longitude, latitude, country})
+		const location = await createCity({ name, longitude, latitude, country });
 
 		res.send(location);
 	} catch (ex) {
@@ -22,14 +28,30 @@ const createCityController = async (req: AppRequest, res: AppResponse) => {
 };
 
 const createLocationController = async (req: AppRequest, res: AppResponse) => {
-	const { name, country, city, address } = req.body;
+	const {
+		name,
+		address,
+		parking,
+		openTime,
+		closeTime,
+		cityId,
+		distanceFromCityCenter,
+		dangerArea,
+		urbanArea,
+	} = req.body;
 
 	try {
-		if (!req.session) return;
-
-		const id: string = req.session.id;
-
-		const location = await createLocation({ name, country, city, address, idUser: id });
+		const location = await createLocation({
+			name,
+			address,
+			parking,
+			openTime,
+			closeTime,
+			cityId,
+			distanceFromCityCenter,
+			dangerArea,
+			urbanArea,
+		});
 
 		res.send(location);
 	} catch (ex) {
@@ -106,7 +128,7 @@ const getCountriesListController = async (req: AppRequest, res: AppResponse) => 
 
 	try {
 		const userFilter = exists(fromUser) ? idUser : undefined;
-		const result = await getCountries(userFilter)
+		const result = await getCountries(userFilter);
 
 		if (!(result?.length > 0)) throw new CustomError("No se encontraron resultados.", 404);
 		res.send(result);
@@ -125,7 +147,7 @@ const getCitiesListController = async (req: AppRequest, res: AppResponse) => {
 
 	try {
 		const userFilter = exists(fromUser) ? idUser : undefined;
-		const result = await getCities(userFilter, country)
+		const result = await getCities(userFilter, country);
 
 		if (!(result?.length > 0)) throw new CustomError("No se encontraron resultados.", 404);
 		res.send(result);

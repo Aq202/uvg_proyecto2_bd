@@ -25,28 +25,40 @@ const createCity = async ({name, longitude,latitude, country}: {name: string, lo
 
 const createLocation = async ({
 	name,
-	country,
-	city,
 	address,
-	idUser,
+	parking, 
+	openTime,
+	closeTime,
+	cityId,
+	distanceFromCityCenter,
+	dangerArea,
+	urbanArea,
 }: {
 	name: string;
-	country: string;
-	city: string;
 	address: string;
-	idUser: string;
+	parking: boolean;
+	openTime: string;
+	closeTime: string;
+	cityId: string;
+	distanceFromCityCenter: string;
+	dangerArea: boolean;
+	urbanArea: boolean;
 }): Promise<AppLocation> => {
-	const location = new LocationSchema();
+	const session = Connection.driver.session();
 
-	location.name = name;
-	location.country = country;
-	location.city = city;
-	location.address = address;
-	location.idUser = idUser as any;
+	const result = await session.run(
+		`	MATCH (c:City {id:$cityId})
+			MERGE (l:Location {name:$name, address:$address, parking:$parking, openTime:$openTime, closeTime:$closeTime})
+			MERGE (l)-[:located_at {distanceFromCityCenter:$distanceFromCityCenter, dangerArea:$dangerArea, urbanArea:$urbanArea}]->(c)
+			RETURN c as city`,
+		{cityId, name, address, parking, openTime, closeTime, distanceFromCityCenter, dangerArea, urbanArea }
+	);
 
-	await location.save();
+	const city = result.records[0].get("city").properties;
 
-	return createLocationDto(location);
+	await session.close();
+
+	return {name, address, parking, openTime, closeTime, city, distanceFromCityCenter, dangerArea, urbanArea}
 };
 
 const updateLocation = async ({
