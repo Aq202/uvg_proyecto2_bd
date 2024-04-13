@@ -3,6 +3,7 @@ type User = {
 	email: string;
 	phone: string;
 	id: string;
+	gender?: string;
 };
 
 type UploadedFile = {

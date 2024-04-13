@@ -1,7 +1,10 @@
+import { Session } from "neo4j-driver";
 import RideSchema from "../../db/schemas/ride.schema.js";
 import UserSchema from "../../db/schemas/user.schema.js";
+import Connection from "../../db_neo4j/connection.js";
 import CustomError from "../../utils/customError.js";
 import exists, { someExists } from "../../utils/exists.js";
+import generateId from "../../utils/generateId.js";
 import { createUserDto, createMultipleUsersDto } from "./user.dto.js";
 
 const createManyUsers = async (users: { name: string, email: string, phone: string, password: string }[]) => {
@@ -24,28 +27,48 @@ const createManyUsers = async (users: { name: string, email: string, phone: stri
 
 }
 
+const verifyIfEmailAlreadyExists = async ({email, session}:{email:string, session:Session}) => {
+
+        const result = await session.run(
+            `MATCH (u:User)
+            WHERE u.email = $email
+            RETURN COUNT(u) AS count`,
+            { email }
+        );
+
+        const count = result.records[0].get('count').toNumber();
+        return count > 0;
+
+}
+
 const createUser = async ({
 	name,
 	email,
 	phone,
 	password,
+	gender,
 }: {
 	name: string;
 	email: string;
 	phone: string;
 	password: string;
+	gender: string,
 }): Promise<User> => {
 	try {
-		const user = new UserSchema();
+		
+		const session = Connection.driver.session();
 
-		user.name = name;
-		user.email = email;
-		user.phone = phone;
-		user.password = password;
+		if((await verifyIfEmailAlreadyExists({email, session}))) throw new CustomError("El email ya se encuentra registrado.", 400)
 
-		await user.save();
+		const id = generateId();
+		const user = {name, email, phone, password, gender, id}
+		await session.run(
+			`CREATE (u:User:Passenger {name:$name, email:$email, phone:$phone, password:$password,
+			gender:$gender, id:$id}) RETURN u`, user);
 
-		return createUserDto(user);
+		await session.close();
+		return user;
+
 	} catch (ex: any) {
 		if (ex.code === 11000 && ex.keyValue?.email !== undefined) {
 			throw new CustomError("El email ya se encuentra registrado.", 400);

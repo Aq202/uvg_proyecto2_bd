@@ -1,6 +1,7 @@
 import yup from "yup";
 
 export default yup.object().shape({
+	gender: yup.string().required("El campo 'gender' es obligatorio."),
 	password: yup.string().required("El campo 'password' es obligatorio."),
 	phone: yup.string().required("El campo 'phone' es obligatorio."),
 	email: yup

@@ -3,55 +3,17 @@ import errorSender from "../../utils/errorSender.js";
 import exists from "../../utils/exists.js";
 import { authenticate, createManyUsers, createUser, updateUser, updateUserSubdocuments } from "./user.model.js";
 import hash from "hash.js";
-import Grid from "gridfs-stream";
-import { connection, mongo } from "../../db/connection.js";
-import CustomError from "../../utils/customError.js";
-import fs from "fs";
+import { connection } from "../../db/connection.js";
 import { GridFSBucket } from "mongodb";
 
-const uploadUserImage = (idUser: string, file: UploadedFile) => {
-
-	return new Promise((resolve, reject) => {
-
-
-		let gfs = Grid(connection.db, mongo);
-		gfs.collection("images");
-
-		const { fileName } = file;
-		// @ts-ignore
-		const filePath = `${global.dirname}/files/${fileName}`;
-
-		const bucket = new GridFSBucket(connection.db, { bucketName: "images" });
-
-		const uploadStream = bucket.openUploadStream(idUser);
-		fs.createReadStream(filePath).pipe(uploadStream);
-
-		uploadStream.on("error", async (error) => {
-			fs.unlink(filePath, () => { }); // Eliminar archivo temporal
-			reject(error)
-		});
-
-		uploadStream.on("finish", () => {
-			fs.unlink(filePath, () => { }); // Eliminar archivo temporal
-			resolve(1);
-		});
-
-	})
-};
 
 const createUserController = async (req: AppRequest, res: AppResponse) => {
-	const { name, email, phone, password } = req.body;
+	const { name, email, phone, password, gender } = req.body;
 
 	try {
 
-		const file = req.uploadedFiles?.[0];
-		if (!file) throw new CustomError("No se proporionó una foto de perfil.", 400);
-
-
 		const passwordHash = hash.sha256().update(password).digest("hex");
-		const user = await createUser({ name, email, phone, password: passwordHash });
-
-		await uploadUserImage(user.id, file)
+		const user = await createUser({ name, email, phone, password: passwordHash, gender });
 
 		res.send(user);
 	} catch (ex) {

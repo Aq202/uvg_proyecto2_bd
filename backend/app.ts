@@ -1,16 +1,17 @@
 import express from "express";
 import cors from "cors";
 import indexRoutes from "./routes/index.js";
-import connect from "./db/connection.js";
 import config from "config";
 import getDirname from "./utils/getDirname.js";
+import Connection from "./db_neo4j/connection.js"
+
 
 const app = express();
 
 // @ts-ignore
 global.dirname = getDirname(import.meta.url) as any;
 
-await connect();
+Connection.connect()
 
 app.use(cors());
 app.use(express.urlencoded({ extended: true }));
