@@ -20,7 +20,26 @@ type AppRequest = session & Record<string, any>;
 
 type AppResponse = Record<string, any>;
 
+
+type City = {
+	id: string,
+	name: string;
+	longitude: string;
+	latitude: string;
+	country: string;
+}
+
 type AppLocation = {
+	name: string;
+	address: string;
+	parking: boolean;
+	openTime: string;
+	closeTime: string;
+	city:City;
+	distance_from_city_center: string;
+	danger_area: boolean;
+	urban_area: boolean;
+} | {
 	id: ObjectId;
 	name: String;
 	country: String;
@@ -57,3 +76,6 @@ type Vehicle = {
 	year?: number;
 	relation?: OwnsRelation;
 };
+
+
+

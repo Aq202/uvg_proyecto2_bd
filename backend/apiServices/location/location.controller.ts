@@ -1,7 +1,25 @@
 import CustomError from "../../utils/customError.js";
 import errorSender from "../../utils/errorSender.js";
 import exists from "../../utils/exists.js";
-import { createLocation, deleteLocation, getCities, getCountries, getLocations, updateLocation } from "./location.model.js";
+import { createCity, createLocation, deleteLocation, getCities, getCountries, getLocations, updateLocation } from "./location.model.js";
+
+
+const createCityController = async (req: AppRequest, res: AppResponse) => {
+	const { name, longitude, latitude, country } = req.body;
+
+	try {
+		
+		const location = await createCity({name, longitude, latitude, country})
+
+		res.send(location);
+	} catch (ex) {
+		await errorSender({
+			res,
+			ex,
+			defaultError: "Ocurrio un error al crear nueva ciudad.",
+		});
+	}
+};
 
 const createLocationController = async (req: AppRequest, res: AppResponse) => {
 	const { name, country, city, address } = req.body;
@@ -121,6 +139,7 @@ const getCitiesListController = async (req: AppRequest, res: AppResponse) => {
 };
 
 export {
+	createCityController,
 	createLocationController,
 	updateLocationController,
 	deleteLocationController,

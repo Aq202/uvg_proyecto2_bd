@@ -1,9 +1,27 @@
 import LocationSchema from "../../db/schemas/location.schema.js";
+import Connection from "../../db_neo4j/connection.js";
 import consts from "../../utils/consts.js";
 import CustomError from "../../utils/customError.js";
 import { someExists } from "../../utils/exists.js";
+import generateId from "../../utils/generateId.js";
 import { createLocationDto, createMultipleLocationsDto } from "./location.dto.js";
 import { ObjectId } from "mongodb";
+
+const createCity = async ({name, longitude,latitude, country}: {name: string, longitude: string, latitude: string, country: string}): Promise<City> => {
+	const session = Connection.driver.session();
+
+	const id = generateId();
+
+	await session.run(
+		` MERGE (c:City {id:$id, name:$name, longitude:$longitude, latitude:$latitude, country:$country})
+      RETURN c`,
+		{id, name, longitude, latitude, country}
+	);
+
+	await session.close();
+
+	return {id, name, longitude, latitude, country}
+}
 
 const createLocation = async ({
 	name,
@@ -156,4 +174,4 @@ const getCities = async (idUser?:string, country?:string) => {
 	return cities;
 }
 
-export { createLocation, updateLocation, deleteLocation, getLocations, getLocationById, getCountries, getCities };
+export { createCity, createLocation, updateLocation, deleteLocation, getLocations, getLocationById, getCountries, getCities };
