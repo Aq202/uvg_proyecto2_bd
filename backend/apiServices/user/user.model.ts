@@ -84,10 +84,26 @@ const authenticate = async ({
 	email: string;
 	password: string;
 }): Promise<User> => {
-	const user = await UserSchema.findOne({ email, password }, { password: 0 });
-	if (!user) throw new CustomError("Usuario o contraseña incorrectos.", 401);
+	
+	const session = Connection.driver.session();
 
-	return createUserDto(user);
+	const result = await session.run(
+		`MATCH (u:User)
+		WHERE u.email = $email and u.password = $password
+		RETURN u AS user
+		LIMIT 1`,
+		{ email, password }
+	);
+
+	if(result.records.length === 0) throw new CustomError("Usuario o contraseña incorrectos.", 401);
+
+
+	const {id, name, phone, gender} = result.records[0].get("user");
+	
+	await session.close();
+
+	return {id, name, phone, gender, email}
+
 };
 
 const updateUser = async ({
