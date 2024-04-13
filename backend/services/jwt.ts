@@ -3,13 +3,14 @@ import config from "config";
 
 const key: string = config.get("jwtKey");
 
-const signToken = ({ id, name, email, phone }: User) =>
+const signToken = ({ id, name, email, phone, gender }: User) =>
 	jwt.sign(
 		{
 			id,
 			name,
 			email,
 			phone,
+			gender
 		},
 		key
 	);
