@@ -43,22 +43,25 @@ const createLocation = async ({
 	distanceFromCityCenter: string;
 	dangerArea: boolean;
 	urbanArea: boolean;
-}): Promise<AppLocation> => {
+}): Promise<AppLocation & {city: City} & LocatedAtRel> => {
 	const session = Connection.driver.session();
 
+	const id = generateId();
 	const result = await session.run(
 		`	MATCH (c:City {id:$cityId})
-			MERGE (l:Location {name:$name, address:$address, parking:$parking, openTime:$openTime, closeTime:$closeTime})
+			MERGE (l:Location {id:$id, name:$name, address:$address, parking:$parking, openTime:$openTime, closeTime:$closeTime})
 			MERGE (l)-[:located_at {distanceFromCityCenter:$distanceFromCityCenter, dangerArea:$dangerArea, urbanArea:$urbanArea}]->(c)
 			RETURN c as city`,
-		{cityId, name, address, parking, openTime, closeTime, distanceFromCityCenter, dangerArea, urbanArea }
+		{id, cityId, name, address, parking, openTime, closeTime, distanceFromCityCenter, dangerArea, urbanArea }
 	);
+
+	if(result.records.length === 0) throw new CustomError("No se encontró la ciudad.", 404);
 
 	const city = result.records[0].get("city").properties;
 
 	await session.close();
 
-	return {name, address, parking, openTime, closeTime, city, distanceFromCityCenter, dangerArea, urbanArea}
+	return {id, name, address, parking, openTime, closeTime, city, distanceFromCityCenter, dangerArea, urbanArea}
 };
 
 const updateLocation = async ({
@@ -144,14 +147,21 @@ const getLocations = async ({
 };
 
 const getLocationById = async (idLocation: string) => {
-	try {
-		const location = await LocationSchema.findById(idLocation);
-		if (!location) return null;
-		return createLocationDto(location);
-	} catch (ex: any) {
-		if (ex?.kind === "ObjectId") throw new CustomError("El id de la ubicación no es válido.", 400);
-		throw ex;
-	}
+	const session = Connection.driver.session();
+
+	const result = await session.run(
+		`	MATCH (l:Location {id:$idLocation})
+			RETURN l as location`,
+		{idLocation}
+	);
+
+	if(result.records.length === 0) return null;
+
+	const location:AppLocation = result.records[0].get("location").properties;
+
+	await session.close();
+
+	return location;
 };
 
 const getCountries = async (idUser?:string) => {

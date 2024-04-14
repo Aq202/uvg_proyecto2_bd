@@ -1,34 +1,50 @@
 import RideSchema from "../../db/schemas/ride.schema.js";
-import { createMultipleRidesDto, createRideDto } from "./ride.dto.js";
+import { createMultipleRidesDto } from "./ride.dto.js";
 import consts from "../../utils/consts.js";
 import { ObjectId } from "mongodb";
 import CustomError from "../../utils/customError.js";
 import { startSession } from "mongoose";
+import Connection from "../../db_neo4j/connection.js";
+import generateId from "../../utils/generateId.js";
 
 const createRide = async ({
 	idStartLocation,
 	idArrivalLocation,
-	user,
-	datetime,
-	vehicle,
+	userId,
+	date,
+	arrival,
+	start,
+	vehicleId,
 }: {
 	idStartLocation: string;
 	idArrivalLocation: string;
-	user: User;
-	datetime: Date;
-	vehicle: Vehicle;
+	userId: string;
+	date: Date;
+	arrival: string;
+	start: string;
+	vehicleId: string;
 }) => {
-	const ride = new RideSchema();
+	const session = Connection.driver.session();
 
-	ride.startLocation = idStartLocation as any;
-	ride.arrivalLocation = idArrivalLocation as any;
-	ride.user = { _id: user.id as any, ...user };
-	ride.datetime = datetime;
-	ride.vehicle = vehicle;
+	const driveId = generateId()
+	const result = await session.run(
+		`	MATCH (u:User {id:$userId})
+			MATCH (v:Vehicle {identification:$vehicleId})
+			MATCH (sl:Location {id:$idStartLocation})
+			MATCH (al:Location {id:$idArrivalLocation})
+			CREATE (d:Drive {id:$driveId, date:$date, arrival:$arrival, completed:$completed,start:$start})
+			CREATE (u)-[:drives]->(d)
+			CREATE (d)-[:starts]->(sl)
+			CREATE (d)-[:addressed_to]->(al)
+			CREATE (d)-[:has]->(v)
+			RETURN u as user, v as vehicle, sl as startLocation, al as arrivalLocation`,
+		{userId, vehicleId, idStartLocation, idArrivalLocation, driveId, date, arrival, completed: false, start }
+	);
 
-	await ride.save();
+	if(result.records.length === 0) throw new CustomError("No se pudo crear el viaje.", 400);
 
-	return createRideDto(ride);
+	await session.close();
+
 };
 
 const getRides = async ({

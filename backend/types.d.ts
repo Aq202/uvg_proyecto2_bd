@@ -30,15 +30,12 @@ type City = {
 }
 
 type AppLocation = {
+	id:string;
 	name: string;
 	address: string;
 	parking: boolean;
 	openTime: string;
 	closeTime: string;
-	city:City;
-	distanceFromCityCenter: string;
-	dangerArea: boolean;
-	urbanArea: boolean;
 } | {
 	id: ObjectId;
 	name: String;
@@ -49,6 +46,15 @@ type AppLocation = {
 };
 
 type Ride = {
+	id: string
+	startLocation: AppLocation;
+	arrivalLocation: AppLocation;
+	date: Date,
+	completed: boolean,
+	arrival: string;
+	start: string;
+}|
+{
 	id: string;
 	startLocation: AppLocation | string;
 	arrivalLocation: AppLocation | string;
@@ -76,6 +82,12 @@ type Vehicle = {
 	year?: number;
 	relation?: OwnsRelation;
 };
+
+type LocatedAtRel = {
+	distanceFromCityCenter?: string;
+	dangerArea?: boolean;
+	urbanArea?: boolean;
+}
 
 
 

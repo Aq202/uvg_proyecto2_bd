@@ -1,27 +1,21 @@
 import yup from "yup";
-import validateId from "../../../utils/validateId.js";
-
 export default yup.object().shape({
-	vehicleColor: yup.string().required("El campo 'vehicleColor' es obligatorio."),
-	vehicleIdentification: yup.string().required("El campo 'vehicleIdentification' es obligatorio."),
-	vehicleType: yup.string().required("El campo 'vehicleType' es obligatorio."),
-	datetime: yup
+
+	vehicleId: yup.string().required("El campo 'vehicleId' es obligatorio."),
+	start: yup.string().required("El campo 'start' es obligatorio."),
+	arrival: yup.string().required("El campo 'arrival' es obligatorio."),
+	date: yup
 		.date()
 		.nullable()
-		.typeError("El campo 'datetime' debe ser en formato fecha.")
-		.required("El campo 'datetime' es obligatorio."),
+		.typeError("El campo 'date' debe ser en formato fecha.")
+		.required("El campo 'date' es obligatorio."),
 	idArrivalLocation: yup
 		.string()
 		.nullable()
-		.required("El campo 'idArrivalLocation' es obligatorio.")
-		.test("validate-id", "El id de la ubicación de llegada no es un id válido.", (id) =>
-			validateId(id)
-		),
+		.required("El campo 'idArrivalLocation' es obligatorio."),
 	idStartLocation: yup
 		.string()
 		.nullable()
 		.required("El campo 'idStartLocation' es obligatorio.")
-		.test("validate-id", "El id de la ubicación de salida no es un id válido.", (id) =>
-			validateId(id)
-		),
+
 });

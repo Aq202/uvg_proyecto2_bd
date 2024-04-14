@@ -3,42 +3,47 @@ import errorSender from "../../utils/errorSender.js";
 import exists from "../../utils/exists.js";
 import parseBoolean from "../../utils/parseBoolean.js";
 import { getLocationById } from "../location/location.model.js";
-import { assignUserToRide, createRide, getRides, getTopUsersWithMostCompletedRides, removeUserFromRide } from "./ride.model.js";
+import { getUserVehicleById } from "../vehicle/vehicle.model.js";
+import {
+	assignUserToRide,
+	createRide,
+	getRides,
+	getTopUsersWithMostCompletedRides,
+	removeUserFromRide,
+} from "./ride.model.js";
 
 const createRideController = async (req: AppRequest, res: AppResponse) => {
 	const {
 		idStartLocation,
 		idArrivalLocation,
-		datetime,
-		vehicleType,
-		vehicleIdentification,
-		vehicleColor,
+		date,
+		arrival,
+		start,
+		vehicleId,
 	} = req.body;
 
 	try {
 		if (!req.session) return;
-		const user = req.session;
-		const vehicle: Vehicle = {
-			identification: vehicleIdentification,
-			type: vehicleType,
-			color: vehicleColor,
-		};
+		const userId = req.session.id;
 
-		// Verificar si existen las ubicaciones
+		// Verificar si existen las ubicaciones y vehiculo
 		if ((await getLocationById(idStartLocation)) === null)
 			throw new CustomError("La ubicación de salida no existe.", 400);
 		if ((await getLocationById(idArrivalLocation)) === null)
 			throw new CustomError("La ubicación de llegada no existe.", 400);
+		if ((await getUserVehicleById(vehicleId, userId)) === null)
+			throw new CustomError("El vehiculo no existe.", 400);
 
-		const ride = await createRide({
+		await createRide({
 			idStartLocation,
 			idArrivalLocation,
-			user,
-			datetime,
-			vehicle,
+			userId,
+			date,
+			arrival,
+			start,
+			vehicleId,
 		});
-
-		res.send(ride);
+		res.send({ok:true});
 	} catch (ex) {
 		await errorSender({
 			res,
@@ -114,13 +119,11 @@ const removeUserFromRideController = async (req: AppRequest, res: AppResponse) =
 	}
 };
 
-const getTopUsersWithMostCompletedRidesController = async (req:AppRequest, res: AppResponse) => {
+const getTopUsersWithMostCompletedRidesController = async (req: AppRequest, res: AppResponse) => {
 	try {
-
 		const result = await getTopUsersWithMostCompletedRides();
 
-		res.send(result)
-
+		res.send(result);
 	} catch (ex) {
 		await errorSender({
 			res,
@@ -128,12 +131,12 @@ const getTopUsersWithMostCompletedRidesController = async (req:AppRequest, res: 
 			defaultError: "Ocurrio un error al obtener top usuarios con más viajes completados.",
 		});
 	}
-}
+};
 
 export {
 	createRideController,
 	getRidesController,
 	assignUserToRideController,
 	removeUserFromRideController,
-	getTopUsersWithMostCompletedRidesController
+	getTopUsersWithMostCompletedRidesController,
 };

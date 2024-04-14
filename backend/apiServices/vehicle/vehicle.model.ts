@@ -36,5 +36,22 @@ const createVehicle = async ({
 	return { type, identification, color, brand, model, year };
 };
 
+const getUserVehicleById = async (idVehicle: string, userId: string) => {
+	const session = Connection.driver.session();
 
-export {createVehicle}
+	const result = await session.run(
+		`	MATCH (:User {id:$userId})-[:owns]->(v:Vehicle {identification:$idVehicle})
+			RETURN v as vehicle`,
+		{ idVehicle, userId }
+	);
+
+	if (result.records.length === 0) return null;
+
+	const location: AppLocation = result.records[0].get("vehicle").properties;
+
+	await session.close();
+
+	return location;
+};
+
+export { createVehicle, getUserVehicleById };
