@@ -38,7 +38,7 @@ const createRide = async ({
 			MATCH (sl:Location {id:$idStartLocation})
 			MATCH (al:Location {id:$idArrivalLocation})
 			CREATE (d:Ride {id:$rideId, date:$date, arrival:$arrival, completed:$completed,start:$start})
-			CREATE (u)-[:drives]->(d)
+			CREATE (u)-[:drives {onMyWay:false}]->(d)
 			CREATE (d)-[:starts]->(sl)
 			CREATE (d)-[:addressed_to]->(al)
 			CREATE (d)-[:has {remainingSpaces:$remainingSpaces, allowsMusic:$allowsMusic, allowsLuggage:$allowsLuggage}]->(v)
@@ -293,7 +293,17 @@ const addPassengerComment = async ({
 	await session.close();
 };
 
-const completePassengerParticipation = async ({idUser, idRide, attended, rating}:{idUser:string, idRide:string, attended:boolean, rating: number}) => {
+const completePassengerParticipation = async ({
+	idUser,
+	idRide,
+	attended,
+	rating,
+}: {
+	idUser: string;
+	idRide: string;
+	attended: boolean;
+	rating: number;
+}) => {
 	const session = Connection.driver.session();
 
 	const result = await session.run(
@@ -308,7 +318,48 @@ const completePassengerParticipation = async ({idUser, idRide, attended, rating}
 		throw new CustomError("No se pudo completar la participación de un pasajero.", 400);
 
 	await session.close();
-}
+};
+
+const startRide = async ({
+	idUser,
+	idRide,
+	wantsToTalk,
+	inAHurry,
+	waitTime,
+	comment,
+}: {
+	idUser: string;
+	idRide: string;
+	wantsToTalk: boolean;
+	inAHurry: boolean;
+	waitTime: number;
+	comment: string;
+}) => {
+	const session = Connection.driver.session();
+
+	const result = await session.run(
+		`	MATCH (u:User {id:$idUser})-[d:drives]->(r:Ride {id:$idRide})
+			MATCH (r)-[s:starts]->(sl:Location)
+			SET d.wantsToTalk=$wantsToTalk, d.inAHurry=$inAHurry, d.onMyWay=true, 
+					s.realStartTime=$realStartTime, s.waitTime=$waitTime, s.comment=$comment
+			RETURN d
+			`,
+		{
+			idUser,
+			idRide,
+			wantsToTalk,
+			inAHurry,
+			realStartTime: new Date().toString(),
+			waitTime,
+			comment,
+		}
+	);
+
+	if (result.records.length === 0)
+		throw new CustomError("No se pudo iniciar el viaje.", 400);
+
+	await session.close();
+};
 
 const getTopUsersWithMostCompletedRides = async () => {
 	const result = await RideSchema.aggregate([
@@ -357,5 +408,6 @@ export {
 	getTopUsersWithMostCompletedRides,
 	createRideRequest,
 	addPassengerComment,
-	completePassengerParticipation
+	completePassengerParticipation,
+	startRide,
 };

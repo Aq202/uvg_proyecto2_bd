@@ -14,6 +14,7 @@ import {
 	getRides,
 	getTopUsersWithMostCompletedRides,
 	removeUserFromRide,
+	startRide,
 } from "./ride.model.js";
 
 const createRideController = async (req: AppRequest, res: AppResponse) => {
@@ -100,7 +101,7 @@ const assignUserToRideController = async (req: AppRequest, res: AppResponse) => 
 		const sessionIdUser = req.session.id;
 
 		// Verificar si existe el usuario
-		if(!(await getUserById({idUser}))) throw new CustomError("El usuario no existe. ",400)
+		if (!(await getUserById({ idUser }))) throw new CustomError("El usuario no existe. ", 400);
 
 		await assignUserToRide({ idUser, idRide, sessionIdUser });
 
@@ -151,10 +152,9 @@ const createRideRequestController = async (req: AppRequest, res: AppResponse) =>
 
 	try {
 		if (!req.session) return;
-		const	idUser = req.session.id;
+		const idUser = req.session.id;
 
-
-		await createRideRequest({idRide, idUser, message})
+		await createRideRequest({ idRide, idUser, message });
 		res.send({ ok: true });
 	} catch (ex) {
 		await errorSender({
@@ -166,14 +166,13 @@ const createRideRequestController = async (req: AppRequest, res: AppResponse) =>
 };
 
 const addPassengerCommentController = async (req: AppRequest, res: AppResponse) => {
-	const { idRide, comment} = req.body;
+	const { idRide, comment } = req.body;
 
 	try {
 		if (!req.session) return;
-		const	idUser = req.session.id;
+		const idUser = req.session.id;
 
-
-		await addPassengerComment({idRide, idUser, comment})
+		await addPassengerComment({ idRide, idUser, comment });
 		res.send({ ok: true });
 	} catch (ex) {
 		await errorSender({
@@ -182,17 +181,16 @@ const addPassengerCommentController = async (req: AppRequest, res: AppResponse) 
 			defaultError: "Ocurrio un error al agregar comentario de pasajero.",
 		});
 	}
-}
+};
 
 const completePassengerParticipationController = async (req: AppRequest, res: AppResponse) => {
 	const { idRide, attended, rating } = req.body;
 
 	try {
 		if (!req.session) return;
-		const	idUser = req.session.id;
+		const idUser = req.session.id;
 
-
-		await completePassengerParticipation({ idUser, idRide, attended, rating: parseInt(rating) })
+		await completePassengerParticipation({ idUser, idRide, attended, rating: parseInt(rating) });
 		res.send({ ok: true });
 	} catch (ex) {
 		await errorSender({
@@ -201,7 +199,25 @@ const completePassengerParticipationController = async (req: AppRequest, res: Ap
 			defaultError: "Ocurrio un error al completar participación de pasajero.",
 		});
 	}
-}
+};
+
+const startRideController = async (req: AppRequest, res: AppResponse) => {
+	const { idRide, wantsToTalk, inAHurry, waitTime, comment } = req.body;
+
+	try {
+		if (!req.session) return;
+		const idUser = req.session.id;
+
+		await startRide({ idUser, idRide, wantsToTalk, inAHurry, waitTime, comment });
+		res.send({ ok: true });
+	} catch (ex) {
+		await errorSender({
+			res,
+			ex,
+			defaultError: "Ocurrio un error al iniciar el viaje.",
+		});
+	}
+};
 
 export {
 	createRideController,
@@ -211,5 +227,6 @@ export {
 	getTopUsersWithMostCompletedRidesController,
 	createRideRequestController,
 	addPassengerCommentController,
-	completePassengerParticipationController
+	completePassengerParticipationController,
+	startRideController
 };
