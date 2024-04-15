@@ -1,13 +1,21 @@
 import LocationSchema from "../../db/schemas/location.schema.js";
 import Connection from "../../db_neo4j/connection.js";
-import consts from "../../utils/consts.js";
 import CustomError from "../../utils/customError.js";
 import { someExists } from "../../utils/exists.js";
 import generateId from "../../utils/generateId.js";
-import { createLocationDto, createMultipleLocationsDto } from "./location.dto.js";
-import { ObjectId } from "mongodb";
+import { createLocationDto } from "./location.dto.js";
 
-const createCity = async ({name, longitude,latitude, country}: {name: string, longitude: string, latitude: string, country: string}): Promise<City> => {
+const createCity = async ({
+	name,
+	longitude,
+	latitude,
+	country,
+}: {
+	name: string;
+	longitude: string;
+	latitude: string;
+	country: string;
+}): Promise<City> => {
 	const session = Connection.driver.session();
 
 	const id = generateId();
@@ -15,18 +23,18 @@ const createCity = async ({name, longitude,latitude, country}: {name: string, lo
 	await session.run(
 		` MERGE (c:City {id:$id, name:$name, longitude:$longitude, latitude:$latitude, country:$country})
       RETURN c`,
-		{id, name, longitude, latitude, country}
+		{ id, name, longitude, latitude, country }
 	);
 
 	await session.close();
 
-	return {id, name, longitude, latitude, country}
-}
+	return { id, name, longitude, latitude, country };
+};
 
 const createLocation = async ({
 	name,
 	address,
-	parking, 
+	parking,
 	openTime,
 	closeTime,
 	cityId,
@@ -43,7 +51,7 @@ const createLocation = async ({
 	distanceFromCityCenter: string;
 	dangerArea: boolean;
 	urbanArea: boolean;
-}): Promise<AppLocation & {city: City} & LocatedAtRel> => {
+}): Promise<AppLocation & { city: City } & LocatedAtRel> => {
 	const session = Connection.driver.session();
 
 	const id = generateId();
@@ -52,16 +60,38 @@ const createLocation = async ({
 			MERGE (l:Location {id:$id, name:$name, address:$address, parking:$parking, openTime:$openTime, closeTime:$closeTime})
 			MERGE (l)-[:located_at {distanceFromCityCenter:$distanceFromCityCenter, dangerArea:$dangerArea, urbanArea:$urbanArea}]->(c)
 			RETURN c as city`,
-		{id, cityId, name, address, parking, openTime, closeTime, distanceFromCityCenter, dangerArea, urbanArea }
+		{
+			id,
+			cityId,
+			name,
+			address,
+			parking,
+			openTime,
+			closeTime,
+			distanceFromCityCenter,
+			dangerArea,
+			urbanArea,
+		}
 	);
 
-	if(result.records.length === 0) throw new CustomError("No se encontró la ciudad.", 404);
+	if (result.records.length === 0) throw new CustomError("No se encontró la ciudad.", 404);
 
 	const city = result.records[0].get("city").properties;
 
 	await session.close();
 
-	return {id, name, address, parking, openTime, closeTime, city, distanceFromCityCenter, dangerArea, urbanArea}
+	return {
+		id,
+		name,
+		address,
+		parking,
+		openTime,
+		closeTime,
+		city,
+		distanceFromCityCenter,
+		dangerArea,
+		urbanArea,
+	};
 };
 
 const updateLocation = async ({
@@ -105,45 +135,27 @@ const deleteLocation = async ({ id, idUser }: { id: string; idUser: string }) =>
 	}
 };
 
-const getLocations = async ({
-	idUser,
-	country,
-	city,
-	page,
-}: {
-	country?: string;
-	city?: string;
-	idUser: string;
-	page?: number;
-}) => {
-	const filter: { idUser: ObjectId; country?: string; city?: string } = {
-		idUser: new ObjectId(idUser),
-	};
+const getLocations = async () => {
+	const session = Connection.driver.session();
 
-	if (country) filter.country = country;
-	if (city) filter.city = city;
+	const result = await session.run(
+		`	MATCH (l:Location)-[r:located_at]->(c:City)
+			RETURN l as location, c as city, r as locatedAtRel
+		`
+	);
 
-	const count = await LocationSchema.countDocuments(filter);
-	const pages = Math.ceil(count / consts.resultsNumberPerPage);
+	if (result.records.length === 0) return null;
 
-	const queryPipeline: any = [
-		{
-			$match: filter,
-		},
-	];
+	const locations: (AppLocation & { city: City & LocatedAtRel })[] = result.records.map(
+		(record) => ({
+			...record.get("location").properties,
+			city: { ...record.get("city").properties, ...record.get("locatedAtRel").properties },
+		})
+	);
 
-	if (page != undefined) {
-		queryPipeline.push({
-			$skip: page * consts.resultsNumberPerPage,
-		});
-		queryPipeline.push({
-			$limit: consts.resultsNumberPerPage,
-		});
-	}
+	await session.close();
 
-	queryPipeline.push({ $sort: {name: 1 }})
-	const locations = await LocationSchema.aggregate(queryPipeline);
-	return { pages, total: count, result: createMultipleLocationsDto(locations) };
+	return locations;
 };
 
 const getLocationById = async (idLocation: string) => {
@@ -152,44 +164,54 @@ const getLocationById = async (idLocation: string) => {
 	const result = await session.run(
 		`	MATCH (l:Location {id:$idLocation})
 			RETURN l as location`,
-		{idLocation}
+		{ idLocation }
 	);
 
-	if(result.records.length === 0) return null;
+	if (result.records.length === 0) return null;
 
-	const location:AppLocation = result.records[0].get("location").properties;
+	const location: AppLocation = result.records[0].get("location").properties;
 
 	await session.close();
 
 	return location;
 };
 
-const getCountries = async (idUser?:string) => {
+const getCountries = async (idUser?: string) => {
+	const filter: { idUser?: string } = {};
+	if (idUser) filter.idUser = idUser;
+	const countries = await LocationSchema.find(filter, { country: 1 })
+		.distinct("country")
+		.sort({ country: 1 });
 
-	const filter:{idUser?:string} = {}
-	if(idUser) filter.idUser = idUser;
-	const countries = await LocationSchema.find(filter, {country: 1}).distinct("country").sort({country: 1})
+	return countries?.map((val) => val);
+};
 
-	return countries?.map(val => val)
-}
-
-const getCities = async (country?:string) => {
+const getCities = async (country?: string) => {
 	const session = Connection.driver.session();
 
 	const result = await session.run(
 		`	MATCH (c:City)
 			${country ? "WHERE c.country=$country" : ""}
 			RETURN c as city`,
-		{country}
+		{ country }
 	);
 
-	if(result.records.length === 0) return null;
+	if (result.records.length === 0) return null;
 
-	const cities:City[] = result.records.map(record => record.get("city").properties)
+	const cities: City[] = result.records.map((record) => record.get("city").properties);
 
 	await session.close();
 
 	return cities;
-}
+};
 
-export { createCity, createLocation, updateLocation, deleteLocation, getLocations, getLocationById, getCountries, getCities };
+export {
+	createCity,
+	createLocation,
+	updateLocation,
+	deleteLocation,
+	getLocations,
+	getLocationById,
+	getCountries,
+	getCities,
+};

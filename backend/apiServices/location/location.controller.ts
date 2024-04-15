@@ -102,15 +102,11 @@ const deleteLocationController = async (req: AppRequest, res: AppResponse) => {
 };
 
 const getLocationsController = async (req: AppRequest, res: AppResponse) => {
-	if (!req.session) return;
-	const { city, country, page } = req.query;
-	const idUser: string = req.session.id;
 
 	try {
-		const parsedPage = exists(page) ? parseInt(page) : undefined;
-		const result = await getLocations({ idUser, country, city, page: parsedPage });
+		const result = await getLocations();
 
-		if (result.result.length === 0) throw new CustomError("No se encontraron resultados.", 404);
+		if (!result || result.length === 0) throw new CustomError("No se encontraron resultados.", 404);
 		res.send(result);
 	} catch (ex) {
 		await errorSender({
