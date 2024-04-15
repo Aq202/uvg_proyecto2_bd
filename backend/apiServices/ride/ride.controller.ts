@@ -3,6 +3,7 @@ import errorSender from "../../utils/errorSender.js";
 import exists from "../../utils/exists.js";
 import parseBoolean from "../../utils/parseBoolean.js";
 import { getLocationById } from "../location/location.model.js";
+import { getUserById } from "../user/user.model.js";
 import { getUserVehicleById } from "../vehicle/vehicle.model.js";
 import {
 	assignUserToRide,
@@ -91,12 +92,15 @@ const getRidesController = async (req: AppRequest, res: AppResponse) => {
 };
 
 const assignUserToRideController = async (req: AppRequest, res: AppResponse) => {
-	const user = req.session;
-	if (!user) return;
+	if (!req.session) return;
 	try {
-		const { idRide } = req.params;
+		const { idRide, idUser } = req.params;
+		const sessionIdUser = req.session.id;
 
-		await assignUserToRide({ user, idRide });
+		// Verificar si existe el usuario
+		if(!(await getUserById({idUser}))) throw new CustomError("El usuario no existe. ",400)
+
+		await assignUserToRide({ idUser, idRide, sessionIdUser });
 
 		res.send({ ok: true });
 	} catch (ex) {

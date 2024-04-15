@@ -3,7 +3,6 @@ import { createMultipleRidesDto } from "./ride.dto.js";
 import consts from "../../utils/consts.js";
 import { ObjectId } from "mongodb";
 import CustomError from "../../utils/customError.js";
-import { startSession } from "mongoose";
 import Connection from "../../db_neo4j/connection.js";
 import generateId from "../../utils/generateId.js";
 
@@ -184,26 +183,38 @@ const getRides = async ({
 	return { pages, total: count, result: createMultipleRidesDto(rides) };
 };
 
-const assignUserToRide = async ({ user, idRide }: { user: User; idRide: string }) => {
-	const session = await startSession();
-	try {
-		session.startTransaction();
-		const ride = await RideSchema.findOneAndUpdate(
-			{ _id: idRide },
-			{ $push: { passengers: { _id: user.id, ...user } }, $inc: { num_passengers: 1 } },
-			{ session }
-		);
+const assignUserToRide = async ({
+	idUser,
+	idRide,
+	sessionIdUser,
+}: {
+	idUser: string;
+	idRide: string;
+	sessionIdUser: string;
+}) => {
+	const session = Connection.driver.session();
 
-		if (!ride) throw new CustomError("No se encontró el viaje.", 404);
-		if (ride.user._id === user.id)
-			throw new CustomError("El conductor no puede ser pasajero.", 400);
+	const result = await session.run(
+		`	MATCH (u:User {id:$idUser})
+			MATCH (r:Ride {id:$idRide})
+			MATCH (:Driver {id:$sessionIdUser})-[:drives]->(r)
+			MATCH (u)-[a:asks]->(r)
+			WHERE NOT EXISTS((u)-[:drives]->(r))
+			MERGE (u)-[p:is_passenger]->(r)
+			SET a.approved = true
+			RETURN p
+			`,
+		{
+			idUser,
+			idRide,
+			sessionIdUser,
+		}
+	);
 
-		await session.commitTransaction();
-	} catch (ex: any) {
-		await session.abortTransaction();
-		if (ex?.kind === "ObjectId") throw new CustomError("El id no es válido.", 400);
-		throw ex;
-	}
+	if (result.records.length === 0)
+		throw new CustomError("No se pudo asignar al usuario como pasajero.", 400);
+
+	await session.close();
 };
 
 const removeUserFromRide = async ({ idUser, idRide }: { idUser: string; idRide: string }) => {
@@ -240,11 +251,15 @@ const createRideRequest = async ({
 			RETURN a
 			`,
 		{
-			idUser, idRide, message, date: new Date().toString()
+			idUser,
+			idRide,
+			message,
+			date: new Date().toString(),
 		}
 	);
 
-	if (result.records.length === 0) throw new CustomError("No se pudo crear la solicitud de viaje.", 400);
+	if (result.records.length === 0)
+		throw new CustomError("No se pudo crear la solicitud de viaje.", 400);
 
 	await session.close();
 };

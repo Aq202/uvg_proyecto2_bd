@@ -16,7 +16,7 @@ const rideRouter = express.Router();
 
 rideRouter.post("/", ensureAuth, validateBody(createRideSchema), createRideController);
 rideRouter.get("/", ensureAuth, getRidesController);
-rideRouter.post("/:idRide/assign", ensureAuth, assignUserToRideController);
+rideRouter.post("/:idRide/assign/:idUser", ensureAuth, assignUserToRideController);
 rideRouter.delete("/:idRide/assignment", ensureAuth, removeUserFromRideController);
 rideRouter.get("/user/top", ensureAuth, getTopUsersWithMostCompletedRidesController);
 rideRouter.post("/request", ensureAuth, validateBody(createRideRequestSchema), createRideRequestController)
