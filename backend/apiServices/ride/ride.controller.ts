@@ -7,6 +7,7 @@ import { getUserVehicleById } from "../vehicle/vehicle.model.js";
 import {
 	assignUserToRide,
 	createRide,
+	createRideRequest,
 	getRides,
 	getTopUsersWithMostCompletedRides,
 	removeUserFromRide,
@@ -49,7 +50,7 @@ const createRideController = async (req: AppRequest, res: AppResponse) => {
 			allowsMusic,
 			allowsLuggage,
 		});
-		res.send({ok:true});
+		res.send({ ok: true });
 	} catch (ex) {
 		await errorSender({
 			res,
@@ -139,10 +140,30 @@ const getTopUsersWithMostCompletedRidesController = async (req: AppRequest, res:
 	}
 };
 
+const createRideRequestController = async (req: AppRequest, res: AppResponse) => {
+	const { idRide, message } = req.body;
+
+	try {
+		if (!req.session) return;
+		const	idUser = req.session.id;
+
+
+		await createRideRequest({idRide, idUser, message})
+		res.send({ ok: true });
+	} catch (ex) {
+		await errorSender({
+			res,
+			ex,
+			defaultError: "Ocurrio un error al crear solicitud de ride.",
+		});
+	}
+};
+
 export {
 	createRideController,
 	getRidesController,
 	assignUserToRideController,
 	removeUserFromRideController,
 	getTopUsersWithMostCompletedRidesController,
+	createRideRequestController,
 };

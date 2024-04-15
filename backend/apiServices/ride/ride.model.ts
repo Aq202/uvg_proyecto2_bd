@@ -32,13 +32,13 @@ const createRide = async ({
 }) => {
 	const session = Connection.driver.session();
 
-	const driveId = generateId();
+	const rideId = generateId();
 	const result = await session.run(
 		`	MATCH (u:User {id:$userId})
 			MATCH (v:Vehicle {identification:$vehicleId})
 			MATCH (sl:Location {id:$idStartLocation})
 			MATCH (al:Location {id:$idArrivalLocation})
-			CREATE (d:Drive {id:$driveId, date:$date, arrival:$arrival, completed:$completed,start:$start})
+			CREATE (d:Ride {id:$rideId, date:$date, arrival:$arrival, completed:$completed,start:$start})
 			CREATE (u)-[:drives]->(d)
 			CREATE (d)-[:starts]->(sl)
 			CREATE (d)-[:addressed_to]->(al)
@@ -50,7 +50,7 @@ const createRide = async ({
 			vehicleId,
 			idStartLocation,
 			idArrivalLocation,
-			driveId,
+			rideId,
 			date,
 			arrival,
 			completed: false,
@@ -221,6 +221,34 @@ const removeUserFromRide = async ({ idUser, idRide }: { idUser: string; idRide: 
 	}
 };
 
+const createRideRequest = async ({
+	idUser,
+	idRide,
+	message,
+}: {
+	idUser: string;
+	idRide: string;
+	message: string;
+}) => {
+	const session = Connection.driver.session();
+
+	const result = await session.run(
+		`	MATCH (u:User {id:$idUser})
+			MATCH (r:Ride {id:$idRide})
+			WHERE NOT EXISTS((u)-[:drives]->(r))
+			MERGE (u)-[a:asks {approved:false, date:$date, message:$message}]->(r)
+			RETURN a
+			`,
+		{
+			idUser, idRide, message, date: new Date().toString()
+		}
+	);
+
+	if (result.records.length === 0) throw new CustomError("No se pudo crear la solicitud de viaje.", 400);
+
+	await session.close();
+};
+
 const getTopUsersWithMostCompletedRides = async () => {
 	const result = await RideSchema.aggregate([
 		{
@@ -266,4 +294,5 @@ export {
 	assignUserToRide,
 	removeUserFromRide,
 	getTopUsersWithMostCompletedRides,
+	createRideRequest,
 };

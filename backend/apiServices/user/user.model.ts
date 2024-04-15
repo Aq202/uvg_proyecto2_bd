@@ -150,14 +150,21 @@ const updateUserSubdocuments = async (user:User) => {
 }
 
 const getUserById = async ({ idUser }: { idUser: string }) => {
-	try {
-		const user = await UserSchema.findById(idUser, { password: 0 });
+	const session = Connection.driver.session();
 
-		return user;
-	} catch (ex: any) {
-		if (ex?.kind === "ObjectId") throw new CustomError("El id de la ubicación no es válido.", 400);
-		throw ex;
-	}
+	const result = await session.run(
+		`	MATCH (u:User {id:$idUser})
+			RETURN u as user`,
+		{ idUser}
+	);
+
+	if (result.records.length === 0) return null;
+
+	const user: User = result.records[0].get("user").properties;
+
+	await session.close();
+
+	return user;
 };
 
 export { createUser, authenticate, updateUser, getUserById, createManyUsers, updateUserSubdocuments };
