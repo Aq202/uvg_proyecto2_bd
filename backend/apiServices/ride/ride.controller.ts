@@ -20,6 +20,9 @@ const createRideController = async (req: AppRequest, res: AppResponse) => {
 		arrival,
 		start,
 		vehicleId,
+		remainingSpaces,
+		allowsMusic,
+		allowsLuggage,
 	} = req.body;
 
 	try {
@@ -42,6 +45,9 @@ const createRideController = async (req: AppRequest, res: AppResponse) => {
 			arrival,
 			start,
 			vehicleId,
+			remainingSpaces,
+			allowsMusic,
+			allowsLuggage,
 		});
 		res.send({ok:true});
 	} catch (ex) {

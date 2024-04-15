@@ -15,6 +15,9 @@ const createRide = async ({
 	arrival,
 	start,
 	vehicleId,
+	remainingSpaces,
+	allowsMusic,
+	allowsLuggage,
 }: {
 	idStartLocation: string;
 	idArrivalLocation: string;
@@ -23,10 +26,13 @@ const createRide = async ({
 	arrival: string;
 	start: string;
 	vehicleId: string;
+	remainingSpaces: number;
+	allowsMusic: boolean;
+	allowsLuggage: boolean;
 }) => {
 	const session = Connection.driver.session();
 
-	const driveId = generateId()
+	const driveId = generateId();
 	const result = await session.run(
 		`	MATCH (u:User {id:$userId})
 			MATCH (v:Vehicle {identification:$vehicleId})
@@ -36,16 +42,28 @@ const createRide = async ({
 			CREATE (u)-[:drives]->(d)
 			CREATE (d)-[:starts]->(sl)
 			CREATE (d)-[:addressed_to]->(al)
-			CREATE (d)-[:has]->(v)
+			CREATE (d)-[:has {remainingSpaces:$remainingSpaces, allowsMusic:$allowsMusic, allowsLuggage:$allowsLuggage}]->(v)
 			SET u:Driver
 			RETURN u as user, v as vehicle, sl as startLocation, al as arrivalLocation`,
-		{userId, vehicleId, idStartLocation, idArrivalLocation, driveId, date, arrival, completed: false, start }
+		{
+			userId,
+			vehicleId,
+			idStartLocation,
+			idArrivalLocation,
+			driveId,
+			date,
+			arrival,
+			completed: false,
+			start,
+			remainingSpaces,
+			allowsMusic,
+			allowsLuggage,
+		}
 	);
 
-	if(result.records.length === 0) throw new CustomError("No se pudo crear el viaje.", 400);
+	if (result.records.length === 0) throw new CustomError("No se pudo crear el viaje.", 400);
 
 	await session.close();
-
 };
 
 const getRides = async ({
@@ -172,7 +190,7 @@ const assignUserToRide = async ({ user, idRide }: { user: User; idRide: string }
 		session.startTransaction();
 		const ride = await RideSchema.findOneAndUpdate(
 			{ _id: idRide },
-			{ $push: { passengers: { _id: user.id, ...user } }, $inc: {num_passengers: 1} },
+			{ $push: { passengers: { _id: user.id, ...user } }, $inc: { num_passengers: 1 } },
 			{ session }
 		);
 
@@ -192,7 +210,7 @@ const removeUserFromRide = async ({ idUser, idRide }: { idUser: string; idRide: 
 	try {
 		const { acknowledged, matchedCount } = await RideSchema.updateOne(
 			{ _id: idRide },
-			{ passengers: { $pull: { _id: idUser }, }, $inc: {num_passengers: -1} }
+			{ passengers: { $pull: { _id: idUser } }, $inc: { num_passengers: -1 } }
 		);
 
 		if (matchedCount === 0) throw new CustomError("No se encontraron coincidencias.", 404);
@@ -204,43 +222,48 @@ const removeUserFromRide = async ({ idUser, idRide }: { idUser: string; idRide: 
 };
 
 const getTopUsersWithMostCompletedRides = async () => {
-
 	const result = await RideSchema.aggregate([
 		{
-			$match: { completed: true } 
+			$match: { completed: true },
 		},
 		{
 			$group: {
-				_id: "$user._id", 
-				totalTrips: { $sum: 1 } 
-			}
+				_id: "$user._id",
+				totalTrips: { $sum: 1 },
+			},
 		},
 		{
-			$lookup: { 
+			$lookup: {
 				from: "users",
 				localField: "_id",
 				foreignField: "_id",
-				as: "user"
-			}
+				as: "user",
+			},
 		},
 		{
-			$unwind: "$user" 
+			$unwind: "$user",
 		},
 		{
-			$addFields: {"user.id": "$user._id"}
+			$addFields: { "user.id": "$user._id" },
 		},
 		{
-			$project: {totalTrips: 1, "user.name":1, "_id":0, "user.id": 1}
+			$project: { totalTrips: 1, "user.name": 1, _id: 0, "user.id": 1 },
 		},
 		{
-			$sort: { totalTrips: -1 } 
+			$sort: { totalTrips: -1 },
 		},
 		{
-			$limit: 5 
-		}
-	])
+			$limit: 5,
+		},
+	]);
 
 	return result;
-}
+};
 
-export { createRide, getRides, assignUserToRide, removeUserFromRide, getTopUsersWithMostCompletedRides };
+export {
+	createRide,
+	getRides,
+	assignUserToRide,
+	removeUserFromRide,
+	getTopUsersWithMostCompletedRides,
+};
