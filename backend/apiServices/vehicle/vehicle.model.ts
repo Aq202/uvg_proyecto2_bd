@@ -54,4 +54,22 @@ const getUserVehicleById = async (idVehicle: string, userId: string) => {
 	return location;
 };
 
-export { createVehicle, getUserVehicleById };
+const getUserVehicles = async (userId: string) => {
+	const session = Connection.driver.session();
+
+	const result = await session.run(
+		`	MATCH (:User {id:$userId})-[:owns]->(v:Vehicle)
+			RETURN v as vehicle`,
+		{ userId }
+	);
+
+	if(result.records.length === 0) return null;
+
+	const vehicles:Vehicle[] = result.records.map(record => record.get("vehicle").properties)
+
+	await session.close();
+
+	return vehicles;
+}
+
+export { createVehicle, getUserVehicleById, getUserVehicles };
