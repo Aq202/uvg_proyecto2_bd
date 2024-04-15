@@ -264,6 +264,36 @@ const createRideRequest = async ({
 	await session.close();
 };
 
+const addPassengerComment = async ({
+	idUser,
+	idRide,
+	comment,
+}: {
+	idUser: string;
+	idRide: string;
+	comment: string;
+}) => {
+	const session = Connection.driver.session();
+
+	const result = await session.run(
+		`	MATCH (u:User {id:$idUser})-[p:is_passenger]->(r:Ride {id:$idRide})
+			WHERE NOT EXISTS((u)-[:drives]->(r))
+			SET p.comments = coalesce(p.comments, []) + [$comment]
+			RETURN p
+			`,
+		{
+			idUser,
+			idRide,
+			comment,
+		}
+	);
+
+	if (result.records.length === 0)
+		throw new CustomError("No se pudo agregar el comentario del pasajero al viaje.", 400);
+
+	await session.close();
+};
+
 const getTopUsersWithMostCompletedRides = async () => {
 	const result = await RideSchema.aggregate([
 		{
@@ -310,4 +340,5 @@ export {
 	removeUserFromRide,
 	getTopUsersWithMostCompletedRides,
 	createRideRequest,
+	addPassengerComment,
 };

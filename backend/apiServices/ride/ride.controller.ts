@@ -6,6 +6,7 @@ import { getLocationById } from "../location/location.model.js";
 import { getUserById } from "../user/user.model.js";
 import { getUserVehicleById } from "../vehicle/vehicle.model.js";
 import {
+	addPassengerComment,
 	assignUserToRide,
 	createRide,
 	createRideRequest,
@@ -163,6 +164,25 @@ const createRideRequestController = async (req: AppRequest, res: AppResponse) =>
 	}
 };
 
+const addPassengerCommentController = async (req: AppRequest, res: AppResponse) => {
+	const { idRide, comment} = req.body;
+
+	try {
+		if (!req.session) return;
+		const	idUser = req.session.id;
+
+
+		await addPassengerComment({idRide, idUser, comment})
+		res.send({ ok: true });
+	} catch (ex) {
+		await errorSender({
+			res,
+			ex,
+			defaultError: "Ocurrio un error al agregar comentario de pasajero.",
+		});
+	}
+}
+
 export {
 	createRideController,
 	getRidesController,
@@ -170,4 +190,5 @@ export {
 	removeUserFromRideController,
 	getTopUsersWithMostCompletedRidesController,
 	createRideRequestController,
+	addPassengerCommentController,
 };
