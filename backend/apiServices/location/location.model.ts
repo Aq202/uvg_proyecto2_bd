@@ -173,25 +173,21 @@ const getCountries = async (idUser?:string) => {
 	return countries?.map(val => val)
 }
 
-const getCities = async (idUser?:string, country?:string) => {
+const getCities = async (country?:string) => {
+	const session = Connection.driver.session();
 
-	const filter:{idUser?:ObjectId, country?:string} = {}
-	if(idUser) filter.idUser = new ObjectId(idUser);
-	if(country) filter.country = country;
-	const cities = await LocationSchema.aggregate([
-		{$match: filter},
-		{$group: {_id: {country: "$country", city:"$city"}}},
-		{
-			$project: {
-				_id: 0,
-				country: "$_id.country",
-				city: "$_id.city"
-			}
-		},
-		{
-			$sort: {"city": 1}
-		}
-	])
+	const result = await session.run(
+		`	MATCH (c:City)
+			${country ? "WHERE c.country=$country" : ""}
+			RETURN c as city`,
+		{country}
+	);
+
+	if(result.records.length === 0) return null;
+
+	const cities:City[] = result.records.map(record => record.get("city").properties)
+
+	await session.close();
 
 	return cities;
 }

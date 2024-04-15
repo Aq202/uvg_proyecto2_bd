@@ -142,14 +142,12 @@ const getCountriesListController = async (req: AppRequest, res: AppResponse) => 
 };
 const getCitiesListController = async (req: AppRequest, res: AppResponse) => {
 	if (!req.session) return;
-	const { fromUser, country } = req.query;
-	const idUser: string = req.session.id;
+	const {  country } = req.query;
 
 	try {
-		const userFilter = exists(fromUser) ? idUser : undefined;
-		const result = await getCities(userFilter, country);
+		const result = await getCities(country);
 
-		if (!(result?.length > 0)) throw new CustomError("No se encontraron resultados.", 404);
+		if (!result || !(result.length > 0)) throw new CustomError("No se encontraron resultados.", 404);
 		res.send(result);
 	} catch (ex) {
 		await errorSender({
