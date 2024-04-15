@@ -37,6 +37,7 @@ const createRide = async ({
 			CREATE (d)-[:starts]->(sl)
 			CREATE (d)-[:addressed_to]->(al)
 			CREATE (d)-[:has]->(v)
+			SET u:Driver
 			RETURN u as user, v as vehicle, sl as startLocation, al as arrivalLocation`,
 		{userId, vehicleId, idStartLocation, idArrivalLocation, driveId, date, arrival, completed: false, start }
 	);
