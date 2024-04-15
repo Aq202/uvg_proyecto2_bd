@@ -3,6 +3,7 @@ import ensureAuth from "../../middlewares/ensureAuth.js";
 import {
 	addPassengerCommentController,
 	assignUserToRideController,
+	completePassengerParticipationController,
 	createRideController,
 	createRideRequestController,
 	getRidesController,
@@ -13,6 +14,7 @@ import validateBody from "../../middlewares/validateBody.js";
 import createRideSchema from "./validationSchemas/createRideSchema.js";
 import createRideRequestSchema from "./validationSchemas/createRideRequestSchema.js";
 import commentRideSchema from "./validationSchemas/commentRideSchema.js";
+import completePassengerSchema from "./validationSchemas/completePassengerSchema.js";
 
 const rideRouter = express.Router();
 
@@ -23,5 +25,6 @@ rideRouter.delete("/:idRide/assignment", ensureAuth, removeUserFromRideControlle
 rideRouter.get("/user/top", ensureAuth, getTopUsersWithMostCompletedRidesController);
 rideRouter.post("/request", ensureAuth, validateBody(createRideRequestSchema), createRideRequestController);
 rideRouter.post("/comment", ensureAuth, validateBody(commentRideSchema), addPassengerCommentController);
+rideRouter.post("/passenger/complete", ensureAuth, validateBody(completePassengerSchema), completePassengerParticipationController);
 
 export default rideRouter;

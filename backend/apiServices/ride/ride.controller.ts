@@ -8,6 +8,7 @@ import { getUserVehicleById } from "../vehicle/vehicle.model.js";
 import {
 	addPassengerComment,
 	assignUserToRide,
+	completePassengerParticipation,
 	createRide,
 	createRideRequest,
 	getRides,
@@ -183,6 +184,25 @@ const addPassengerCommentController = async (req: AppRequest, res: AppResponse) 
 	}
 }
 
+const completePassengerParticipationController = async (req: AppRequest, res: AppResponse) => {
+	const { idRide, attended, rating } = req.body;
+
+	try {
+		if (!req.session) return;
+		const	idUser = req.session.id;
+
+
+		await completePassengerParticipation({ idUser, idRide, attended, rating: parseInt(rating) })
+		res.send({ ok: true });
+	} catch (ex) {
+		await errorSender({
+			res,
+			ex,
+			defaultError: "Ocurrio un error al completar participación de pasajero.",
+		});
+	}
+}
+
 export {
 	createRideController,
 	getRidesController,
@@ -191,4 +211,5 @@ export {
 	getTopUsersWithMostCompletedRidesController,
 	createRideRequestController,
 	addPassengerCommentController,
+	completePassengerParticipationController
 };

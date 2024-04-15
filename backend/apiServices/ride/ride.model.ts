@@ -277,7 +277,6 @@ const addPassengerComment = async ({
 
 	const result = await session.run(
 		`	MATCH (u:User {id:$idUser})-[p:is_passenger]->(r:Ride {id:$idRide})
-			WHERE NOT EXISTS((u)-[:drives]->(r))
 			SET p.comments = coalesce(p.comments, []) + [$comment]
 			RETURN p
 			`,
@@ -293,6 +292,23 @@ const addPassengerComment = async ({
 
 	await session.close();
 };
+
+const completePassengerParticipation = async ({idUser, idRide, attended, rating}:{idUser:string, idRide:string, attended:boolean, rating: number}) => {
+	const session = Connection.driver.session();
+
+	const result = await session.run(
+		`	MATCH (u:User {id:$idUser})-[p:is_passenger]->(r:Ride {id:$idRide})
+			SET p.completed=true, p.rating=$rating
+			RETURN p
+			`,
+		{ idUser, idRide, attended, rating }
+	);
+
+	if (result.records.length === 0)
+		throw new CustomError("No se pudo completar la participación de un pasajero.", 400);
+
+	await session.close();
+}
 
 const getTopUsersWithMostCompletedRides = async () => {
 	const result = await RideSchema.aggregate([
@@ -341,4 +357,5 @@ export {
 	getTopUsersWithMostCompletedRides,
 	createRideRequest,
 	addPassengerComment,
+	completePassengerParticipation
 };
