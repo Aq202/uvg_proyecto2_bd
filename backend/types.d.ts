@@ -47,8 +47,6 @@ type AppLocation = {
 
 type Ride = {
 	id: string
-	startLocation: AppLocation;
-	arrivalLocation: AppLocation;
 	date: Date,
 	completed: boolean,
 	arrival: string;
@@ -87,6 +85,42 @@ type LocatedAtRel = {
 	distanceFromCityCenter?: string;
 	dangerArea?: boolean;
 	urbanArea?: boolean;
+}
+
+type DrivesRel = {
+	wantsToTalk: boolean;
+	inAHurry: boolean;
+	onMyWay: boolean;
+}
+
+type IsPassengerRel = {
+	completed: boolean;
+	comments: string[];
+	rating: number;
+}
+
+type AsksRel = {
+	date: string;
+	approved: boolean;
+	message: string;
+}
+
+type HasRel = {
+	remainingSpaces: number;
+	allowsMusic: boolean;
+	allowsLuggage: boolean;
+}
+
+type StartsRel = {
+	realStartTime: string;
+	waitTime: number;
+	comment: string;
+}
+
+type AddressedToRel = {
+	realArrivalTime: string;
+	onTime: boolean;
+	comment: string;
 }
 
 

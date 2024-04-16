@@ -1,10 +1,9 @@
 import RideSchema from "../../db/schemas/ride.schema.js";
-import { createMultipleRidesDto } from "./ride.dto.js";
 import consts from "../../utils/consts.js";
-import { ObjectId } from "mongodb";
 import CustomError from "../../utils/customError.js";
 import Connection from "../../db_neo4j/connection.js";
 import generateId from "../../utils/generateId.js";
+import exists from "../../utils/exists.js";
 
 const createRide = async ({
 	idStartLocation,
@@ -78,89 +77,11 @@ const getRides = async ({
 	city?: string;
 	page?: number;
 	order?: number;
-	idUser?: string;
+	idUser: string;
 	passengerFilter?: boolean;
 	driverFilter?: boolean;
 }) => {
-	const queryPipeline: any = [
-		{
-			$lookup: {
-				from: "locations",
-				localField: "startLocation",
-				foreignField: "_id",
-				as: "startLocation",
-			},
-		},
-		{
-			$unwind: "$startLocation",
-		},
-		{
-			$lookup: {
-				from: "locations",
-				localField: "arrivalLocation",
-				foreignField: "_id",
-				as: "arrivalLocation",
-			},
-		},
-		{
-			$unwind: "$arrivalLocation",
-		},
-		{
-			$addFields: {
-				isPassenger: {
-					$anyElementTrue: {
-						$map: {
-							input: "$passengers",
-							as: "passengers",
-							in: {
-								$eq: ["$$passengers._id", new ObjectId(idUser)],
-							},
-						},
-					},
-				},
-			},
-		},
-		{
-			$addFields: {
-				isDriver: {
-					$cond: {
-						if: { $eq: ["$user._id", new ObjectId(idUser)] },
-						then: true,
-						else: false,
-					},
-				},
-			},
-		},
-	];
-
-	// Agregar filtrado por ubicación
-
-	const conditions = [];
-	if (country) {
-		conditions.push({
-			$or: [{ "startLocation.country": country }, { "arrivalLocation.country": country }],
-		});
-	}
-
-	if (city) {
-		conditions.push({
-			$or: [{ "startLocation.city": city }, { "arrivalLocation.city": city }],
-		});
-	}
-
-	if (passengerFilter !== undefined && idUser) {
-		if (passengerFilter)
-			conditions.push({ passengers: { $elemMatch: { _id: new ObjectId(idUser) } } });
-		else conditions.push({ passengers: { $not: { $elemMatch: { _id: new ObjectId(idUser) } } } });
-	}
-
-	if (driverFilter !== undefined && idUser) {
-		if (driverFilter) conditions.push({ "user._id": new ObjectId(idUser) });
-		else conditions.push({ "user._id": { $ne: new ObjectId(idUser) } });
-	}
-
-	if (conditions.length > 0) queryPipeline.push({ $match: { $and: conditions } });
-
+	/*
 	// Realizar conteo total de registros
 	const count =
 		(await RideSchema.aggregate([...queryPipeline, { $count: "total" }]))[0]?.total ?? 0;
@@ -178,9 +99,97 @@ const getRides = async ({
 		queryPipeline.push({
 			$limit: consts.resultsNumberPerPage,
 		});
-	}
-	const rides = await RideSchema.aggregate(queryPipeline);
-	return { pages, total: count, result: createMultipleRidesDto(rides) };
+	*/
+
+	const session = Connection.driver.session();
+		console.log(consts.resultsNumberPerPage.toFixed(0))
+	const result = await session.run(
+		`	MATCH (r:Ride)
+			${country ? "MATCH (r)-[*]->()-[:located_at]->(:City {country:$country})" : ""}
+			${city ? "MATCH (r)-[*]->()-[:located_at]->(:City {name:$city})" : ""}
+			${passengerFilter ? "MATCH (:Passenger {id:$idUser})-[:is_passenger]->(r)" : ""}
+			${driverFilter ? "MATCH (:Driver {id:$idUser})-[:drives]->(r)" : ""}
+			WITH collect(DISTINCT r) AS rides, count(DISTINCT r) as total
+			UNWIND rides as r
+			
+			OPTIONAL MATCH (r)-[has_rel:has]->(v:Vehicle)
+			OPTIONAL MATCH (r)-[starts_rel:starts]->(sl:Location)-[s_located_rel:located_at]->(sc:City)
+			OPTIONAL MATCH (r)-[addressed_rel:addressed_to]->(al:Location)-[a_located_rel:located_at]->(ac:City)
+			OPTIONAL MATCH (u_req:User)-[asks_rel:asks]->(r)
+			OPTIONAL MATCH (u_pass:User)-[pass_rel:is_passenger]->(r)
+			
+			RETURN r AS ride, total,
+			v AS vehicle, has_rel AS ride_has_vehicle_rel,
+			sl AS start_location, starts_rel AS ride_starts_location_rel,
+			sc AS start_city,
+			al AS arrival_location, addressed_rel AS ride_addressed_to_location_rel,
+			ac AS arrival_city,
+			collect({user: u_req, rel: asks_rel}) AS requests, collect({user: u_req, rel: pass_rel}) AS passengers,
+			EXISTS((:Passenger {id:$idUser})-[:is_passenger]->(r)) AS is_passenger,
+			EXISTS((:Driver {id:$idUser})-[:drives]->(r)) AS is_driver
+			
+			ORDER BY r.date ${order === 1 ? "ASC" : "DESC"}
+			${exists(page) ? "SKIP toInteger($skip) LIMIT toInteger($limit)" : ""}
+			`,
+		{
+			skip: (page ?? 0) * consts.resultsNumberPerPage,
+			limit: consts.resultsNumberPerPage,
+			idUser,
+			country,
+			city,
+		}
+	);
+
+	if (result.records.length === 0) return null;
+
+	const rides = result.records.map((record) => {
+		const res = {
+			...record.get("ride").properties,
+			vehicle: {
+				...record.get("vehicle").properties,
+				...record.get("ride_has_vehicle_rel").properties,
+			},
+			startLocation: {
+				...record.get("start_location").properties,
+				...record.get("ride_starts_location_rel").properties,
+				city: record.get("start_city").properties,
+			},
+			arrivalLocation: {
+				...record.get("arrival_location").properties,
+				...record.get("ride_addressed_to_location_rel").properties,
+				city: record.get("arrival_city").properties,
+			},
+			isPassenger: record.get("is_passenger"),
+			isDriver: record.get("is_driver"),
+			requests: record
+				.get("requests")
+				?.map((req: any) => (req?.user !== null ? {
+					user: req?.user ? {...req.user.properties, password: undefined} : undefined,
+					...(req?.rel?.properties ?? {}),
+				} : null)),
+			
+			passengers: record
+			.get("passengers")
+			?.map((req: any) => (req?.user !== null ? {
+				user: req?.user ? {...req.user.properties, password: undefined} : undefined,
+				...(req?.rel?.properties ?? {}),
+			} : null)),
+		};
+		
+		// Si no hay requests o passengers reemplazar por null
+		if(res.requests.length === 1 && res.requests[0] === null) res.requests = null;
+		if(res.passengers.length === 1 && res.passengers[0] === null) res.passengers = null;
+
+		return res;
+	});
+
+	const count = result.records[0].get("total").toNumber();
+	console.log(count);
+	const pages = Math.ceil(count / consts.resultsNumberPerPage);
+
+	await session.close();
+
+	return { pages, total: count, result: rides };
 };
 
 const assignUserToRide = async ({
@@ -385,7 +394,7 @@ const finishRide = async ({
 			idRide,
 			arrivalTime: new Date().toString(),
 			onTime,
-			comment
+			comment,
 		}
 	);
 

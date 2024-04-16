@@ -84,7 +84,7 @@ const getRidesController = async (req: AppRequest, res: AppResponse) => {
 			driverFilter: driver !== undefined ? parseBoolean(driver) : undefined,
 		});
 
-		if (result.result.length === 0) throw new CustomError("No se encontraron resultados.", 404);
+		if (!result || result.result.length === 0) throw new CustomError("No se encontraron resultados.", 404);
 		res.send(result);
 	} catch (ex) {
 		await errorSender({
