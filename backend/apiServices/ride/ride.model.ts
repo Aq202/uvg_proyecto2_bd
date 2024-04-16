@@ -355,8 +355,41 @@ const startRide = async ({
 		}
 	);
 
-	if (result.records.length === 0)
-		throw new CustomError("No se pudo iniciar el viaje.", 400);
+	if (result.records.length === 0) throw new CustomError("No se pudo iniciar el viaje.", 400);
+
+	await session.close();
+};
+
+const finishRide = async ({
+	idUser,
+	idRide,
+	onTime,
+	comment,
+}: {
+	idUser: string;
+	idRide: string;
+	onTime: boolean;
+	comment: string;
+}) => {
+	const session = Connection.driver.session();
+
+	const result = await session.run(
+		`	MATCH (u:User {id:$idUser})-[d:drives]->(r:Ride {id:$idRide})
+			MATCH (r)-[a:addressed_to]->(al:Location)
+			SET d.onMyWay=false, r.completed=true,
+					a.realArrivalTime=$arrivalTime, a.onTime=$onTime, a.comment=$comment
+			RETURN d
+			`,
+		{
+			idUser,
+			idRide,
+			arrivalTime: new Date().toString(),
+			onTime,
+			comment
+		}
+	);
+
+	if (result.records.length === 0) throw new CustomError("No se pudo finalizar el viaje.", 400);
 
 	await session.close();
 };
@@ -410,4 +443,5 @@ export {
 	addPassengerComment,
 	completePassengerParticipation,
 	startRide,
+	finishRide,
 };

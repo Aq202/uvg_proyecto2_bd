@@ -11,6 +11,7 @@ import {
 	completePassengerParticipation,
 	createRide,
 	createRideRequest,
+	finishRide,
 	getRides,
 	getTopUsersWithMostCompletedRides,
 	removeUserFromRide,
@@ -218,6 +219,23 @@ const startRideController = async (req: AppRequest, res: AppResponse) => {
 		});
 	}
 };
+const finishRideController = async (req: AppRequest, res: AppResponse) => {
+	const { idRide, onTime, comment } = req.body;
+
+	try {
+		if (!req.session) return;
+		const idUser = req.session.id;
+
+		await finishRide({ idUser, idRide, onTime, comment });
+		res.send({ ok: true });
+	} catch (ex) {
+		await errorSender({
+			res,
+			ex,
+			defaultError: "Ocurrio un error al finalizar el viaje.",
+		});
+	}
+};
 
 export {
 	createRideController,
@@ -228,5 +246,6 @@ export {
 	createRideRequestController,
 	addPassengerCommentController,
 	completePassengerParticipationController,
-	startRideController
+	startRideController,
+	finishRideController,
 };

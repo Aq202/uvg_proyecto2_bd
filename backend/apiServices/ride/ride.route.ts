@@ -6,6 +6,7 @@ import {
 	completePassengerParticipationController,
 	createRideController,
 	createRideRequestController,
+	finishRideController,
 	getRidesController,
 	getTopUsersWithMostCompletedRidesController,
 	removeUserFromRideController,
@@ -17,6 +18,7 @@ import createRideRequestSchema from "./validationSchemas/createRideRequestSchema
 import commentRideSchema from "./validationSchemas/commentRideSchema.js";
 import completePassengerSchema from "./validationSchemas/completePassengerSchema.js";
 import startRideSchema from "./validationSchemas/startRideSchema.js";
+import finishRideSchema from "./validationSchemas/finishRideSchema.js";
 
 const rideRouter = express.Router();
 
@@ -29,5 +31,6 @@ rideRouter.post("/request", ensureAuth, validateBody(createRideRequestSchema), c
 rideRouter.post("/comment", ensureAuth, validateBody(commentRideSchema), addPassengerCommentController);
 rideRouter.post("/passenger/complete", ensureAuth, validateBody(completePassengerSchema), completePassengerParticipationController);
 rideRouter.patch("/start", ensureAuth, validateBody(startRideSchema), startRideController);
+rideRouter.patch("/finish", ensureAuth, validateBody(finishRideSchema), finishRideController);
 
 export default rideRouter;
