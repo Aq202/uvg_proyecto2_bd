@@ -95,6 +95,29 @@ const getRidesController = async (req: AppRequest, res: AppResponse) => {
 	}
 };
 
+const getRideController = async (req: AppRequest, res: AppResponse) => {
+	const { idRide } = req.params;
+	if (!req.session) return;
+	const idUser = req.session.id;
+
+	try {
+
+		const result = await getRides({
+			idUser,
+			idRide
+		});
+
+		if (!result || result.result.length === 0) throw new CustomError("No se encontraron resultados.", 404);
+		res.send(result.result[0]);
+	} catch (ex) {
+		await errorSender({
+			res,
+			ex,
+			defaultError: "Ocurrio un error al obtener viaje.",
+		});
+	}
+};
+
 const assignUserToRideController = async (req: AppRequest, res: AppResponse) => {
 	if (!req.session) return;
 	try {
@@ -248,4 +271,5 @@ export {
 	completePassengerParticipationController,
 	startRideController,
 	finishRideController,
+	getRideController,
 };

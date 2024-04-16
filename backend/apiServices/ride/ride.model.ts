@@ -72,6 +72,7 @@ const getRides = async ({
 	idUser,
 	passengerFilter,
 	driverFilter,
+	idRide,
 }: {
 	country?: string;
 	city?: string;
@@ -80,31 +81,13 @@ const getRides = async ({
 	idUser: string;
 	passengerFilter?: boolean;
 	driverFilter?: boolean;
+	idRide?:string;
 }) => {
-	/*
-	// Realizar conteo total de registros
-	const count =
-		(await RideSchema.aggregate([...queryPipeline, { $count: "total" }]))[0]?.total ?? 0;
-	const pages = Math.ceil(count / consts.resultsNumberPerPage);
-
-	// ordenar por fecha
-	queryPipeline.push({ $sort: { datetime: order ?? -1 } });
-
-	// Limitar segun paginación
-
-	if (page != undefined) {
-		queryPipeline.push({
-			$skip: page * consts.resultsNumberPerPage,
-		});
-		queryPipeline.push({
-			$limit: consts.resultsNumberPerPage,
-		});
-	*/
 
 	const session = Connection.driver.session();
-		console.log(consts.resultsNumberPerPage.toFixed(0))
+	
 	const result = await session.run(
-		`	MATCH (r:Ride)
+		`	MATCH (r:Ride ${idRide ? "{id:$idRide}" : ""})
 			${country ? "MATCH (r)-[*]->()-[:located_at]->(:City {country:$country})" : ""}
 			${city ? "MATCH (r)-[*]->()-[:located_at]->(:City {name:$city})" : ""}
 			${passengerFilter ? "MATCH (:Passenger {id:$idUser})-[:is_passenger]->(r)" : ""}
@@ -137,6 +120,7 @@ const getRides = async ({
 			idUser,
 			country,
 			city,
+			idRide,
 		}
 	);
 
@@ -175,7 +159,7 @@ const getRides = async ({
 				...(req?.rel?.properties ?? {}),
 			} : null)),
 		};
-		
+
 		// Si no hay requests o passengers reemplazar por null
 		if(res.requests.length === 1 && res.requests[0] === null) res.requests = null;
 		if(res.passengers.length === 1 && res.passengers[0] === null) res.passengers = null;
@@ -184,7 +168,6 @@ const getRides = async ({
 	});
 
 	const count = result.records[0].get("total").toNumber();
-	console.log(count);
 	const pages = Math.ceil(count / consts.resultsNumberPerPage);
 
 	await session.close();
