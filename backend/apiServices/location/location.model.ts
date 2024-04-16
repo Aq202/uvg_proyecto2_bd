@@ -205,6 +205,25 @@ const getCities = async (country?: string) => {
 	return cities;
 };
 
+const assignHome = async ({idUser, idLocation, isOwner, postalCode, livesAlone}: {idUser:string; idLocation:string; isOwner:boolean; postalCode: number; livesAlone:boolean})=>{
+	const session = Connection.driver.session();
+    const result = await session.run(`
+			MATCH (u:User {id:$idUser})
+			MATCH (l:Location {id:$idLocation})
+			MERGE (u)-[:lives_at {isOwner:$isOwner, postalCode:$postalCode, livesAlone:$livesAlone}]->(l)
+			RETURN u
+			`, {
+        idUser,
+				idLocation,
+				isOwner,
+				postalCode,
+				livesAlone,
+    });
+    if (result.records.length === 0)
+        throw new CustomError("No se pudo asignar la ubicación como casa.", 400);
+    await session.close();
+}
+
 export {
 	createCity,
 	createLocation,
@@ -214,4 +233,5 @@ export {
 	getLocationById,
 	getCountries,
 	getCities,
+	assignHome,
 };

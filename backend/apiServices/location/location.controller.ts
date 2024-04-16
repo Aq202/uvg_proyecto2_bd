@@ -2,11 +2,13 @@ import CustomError from "../../utils/customError.js";
 import errorSender from "../../utils/errorSender.js";
 import exists from "../../utils/exists.js";
 import {
+	assignHome,
 	createCity,
 	createLocation,
 	deleteLocation,
 	getCities,
 	getCountries,
+	getLocationById,
 	getLocations,
 	updateLocation,
 } from "./location.model.js";
@@ -154,6 +156,28 @@ const getCitiesListController = async (req: AppRequest, res: AppResponse) => {
 	}
 };
 
+const assignHomeController = async (req: AppRequest, res: AppResponse) => {
+	if (!req.session) return;
+	try {
+		const {  idLocation, isOwner, postalCode, livesAlone } = req.body;
+		const idUser = req.session.id;
+
+
+		// Verificar si existe la ubicación
+		if (!(await getLocationById(idLocation))) throw new CustomError("La ubicación no existe. ", 400);
+
+		await assignHome({idUser, idLocation, isOwner, postalCode, livesAlone})
+
+		res.send({ ok: true });
+	} catch (ex) {
+		await errorSender({
+			res,
+			ex,
+			defaultError: "Ocurrio un error al asignar casa.",
+		});
+	}
+};
+
 export {
 	createCityController,
 	createLocationController,
@@ -162,4 +186,5 @@ export {
 	getLocationsController,
 	getCountriesListController,
 	getCitiesListController,
+	assignHomeController,
 };
