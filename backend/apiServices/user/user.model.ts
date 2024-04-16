@@ -167,4 +167,23 @@ const getUserById = async ({ idUser }: { idUser: string }) => {
 	return user;
 };
 
-export { createUser, authenticate, updateUser, getUserById, createManyUsers, updateUserSubdocuments };
+const addFriend = async ({idUser1, idUser2, relation, closeLevel}: {idUser1:string; idUser2:string; relation:string; closeLevel:number})=>{
+	const session = Connection.driver.session();
+    const result = await session.run(`
+			MATCH (u1:User {id:$idUser1})
+			MATCH (u2:User {id:$idUser2})
+			MERGE (u1)-[:knows {since:$since, relation:$relation, closeLevel:$closeLevel}]->(u2)
+			RETURN u1
+			`, {
+        idUser1,
+				idUser2,
+				relation,
+				closeLevel,
+				since: new Date().toString(),
+    });
+    if (result.records.length === 0)
+        throw new CustomError("No se pudo asignar al usuario como amigo.", 400);
+    await session.close();
+}
+
+export { createUser, authenticate, updateUser, getUserById, createManyUsers, updateUserSubdocuments, addFriend };
