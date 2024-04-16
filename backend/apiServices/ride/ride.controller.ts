@@ -66,7 +66,7 @@ const createRideController = async (req: AppRequest, res: AppResponse) => {
 };
 
 const getRidesController = async (req: AppRequest, res: AppResponse) => {
-	const { city, country, page, order, passenger, driver } = req.query;
+	const { city, country, page, order, passenger, driver, onlyFriends } = req.query;
 	if (!req.session) return;
 	const idUser = req.session.id;
 
@@ -82,6 +82,7 @@ const getRidesController = async (req: AppRequest, res: AppResponse) => {
 			idUser,
 			passengerFilter: passenger !== undefined ? parseBoolean(passenger) : undefined,
 			driverFilter: driver !== undefined ? parseBoolean(driver) : undefined,
+			onlyFriendsFilter: onlyFriends !== undefined ? parseBoolean(onlyFriends) : undefined
 		});
 
 		if (!result || result.result.length === 0) throw new CustomError("No se encontraron resultados.", 404);

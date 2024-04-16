@@ -73,6 +73,7 @@ const getRides = async ({
 	passengerFilter,
 	driverFilter,
 	idRide,
+	onlyFriendsFilter,
 }: {
 	country?: string;
 	city?: string;
@@ -82,6 +83,7 @@ const getRides = async ({
 	passengerFilter?: boolean;
 	driverFilter?: boolean;
 	idRide?:string;
+	onlyFriendsFilter?:boolean;
 }) => {
 
 	const session = Connection.driver.session();
@@ -92,6 +94,9 @@ const getRides = async ({
 			${city ? "MATCH (r)-[*]->()-[:located_at]->(:City {name:$city})" : ""}
 			${passengerFilter ? "MATCH (:Passenger {id:$idUser})-[:is_passenger]->(r)" : ""}
 			${driverFilter ? "MATCH (:Driver {id:$idUser})-[:drives]->(r)" : ""}
+			${onlyFriendsFilter ? `	MATCH (dr:Driver)-[:drives]->(r)
+															MATCH (u:User {id:$idUser})
+															WHERE EXISTS((u)-[:knows]->(dr))`: ""}
 			WITH collect(DISTINCT r) AS rides, count(DISTINCT r) as total
 			UNWIND rides as r
 			
