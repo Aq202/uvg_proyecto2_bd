@@ -1,7 +1,7 @@
 import { signToken } from "../../services/jwt.js";
 import errorSender from "../../utils/errorSender.js";
 import exists from "../../utils/exists.js";
-import { addFriend, authenticate, createManyUsers, createUser, getUserById, getUsersList, updateUser, updateUserSubdocuments } from "./user.model.js";
+import { addFriend, authenticate, createManyUsers, createUser, getUserById, getUsersList, removeFriend, updateUser, updateUserSubdocuments } from "./user.model.js";
 import hash from "hash.js";
 import { connection } from "../../db/connection.js";
 import { GridFSBucket } from "mongodb";
@@ -168,6 +168,28 @@ const addFriendController = async (req: AppRequest, res: AppResponse) => {
 		});
 	}
 };
+const removeFriendController = async (req: AppRequest, res: AppResponse) => {
+	if (!req.session) return;
+	try {
+		const { idUser } = req.params;
+		const sessionIdUser = req.session.id;
+
+		if(idUser?.trim() === sessionIdUser) throw new CustomError("No puedes eliminarte a ti mismo como amigo.", 400);
+
+		// Verificar si existe el usuario
+		if (!(await getUserById({ idUser }))) throw new CustomError("El usuario no existe. ", 400);
+
+		await removeFriend({idUser1: sessionIdUser, idUser2: idUser })
+
+		res.send({ ok: true });
+	} catch (ex) {
+		await errorSender({
+			res,
+			ex,
+			defaultError: "Ocurrio un error al eliminar amigo.",
+		});
+	}
+};
 
 const getUsersListController = async (req: AppRequest, res: AppResponse) => {
 	if (!req.session) return;
@@ -194,4 +216,5 @@ export {
 	uploadUsers,
 	addFriendController,
 	getUsersListController,
+	removeFriendController,
 };

@@ -6,6 +6,7 @@ import {
 	getUserImageController,
 	getUsersListController,
 	loginController,
+	removeFriendController,
 	updateUserController,
 	uploadUsers,
 } from "./user.controller.js";
@@ -27,4 +28,5 @@ userRouter.get("/", ensureAuth, getSessionUserController);
 userRouter.get("/:idUser/image", getUserImageController);
 userRouter.post("/addFriend", ensureAuth, validateBody(addFriendSchema), addFriendController);
 userRouter.get("/list", ensureAuth, getUsersListController);
+userRouter.delete("/friend/:idUser", ensureAuth, removeFriendController);
 export default userRouter;

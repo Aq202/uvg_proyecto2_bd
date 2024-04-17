@@ -203,6 +203,30 @@ const addFriend = async ({
 	await session.close();
 };
 
+const removeFriend = async ({
+	idUser1,
+	idUser2,
+}: {
+	idUser1: string;
+	idUser2: string;
+}) => {
+	const session = Connection.driver.session();
+	const result = await session.run(
+		`
+			MATCH (u1:User {id:$idUser1})-[k:knows]->(u2:User {id:$idUser2})
+			DELETE k
+			RETURN u1, u2
+			`,
+		{
+			idUser1,
+			idUser2,
+		}
+	);
+	if (result.records.length === 0)
+		throw new CustomError("El usuario en sesión no tiene a este amigo agregado.", 400);
+	await session.close();
+};
+
 const getUsersList = async ({ idUser }: { idUser: string }) => {
 	const session = Connection.driver.session();
 
@@ -236,4 +260,5 @@ export {
 	updateUserSubdocuments,
 	addFriend,
 	getUsersList,
+	removeFriend
 };
