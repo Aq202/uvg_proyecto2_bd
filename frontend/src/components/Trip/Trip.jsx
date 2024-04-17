@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import { FaLongArrowAltRight as ArrowIcon } from 'react-icons/fa';
 import styles from './Trip.module.css';
@@ -6,6 +6,9 @@ import Button from '../Button';
 import useFetch from '../../hooks/useFetch';
 import useToken from '../../hooks/useToken';
 import { serverHost } from '../../config';
+import PopUp from '../PopUp/PopUp';
+import usePopUp from '../../hooks/usePopUp';
+import InputText from '../InputText';
 
 function Trip({
   id,
@@ -26,31 +29,67 @@ function Trip({
   owner,
 }) {
   const { callFetch: joinRide, result: resultPost, loading: loadingPost } = useFetch();
-  const { callFetch: leaveRide, result: resultDelete, loading: loadingDelete } = useFetch();
+  // const { callFetch: leaveRide, result: resultDelete, loading: loadingDelete } = useFetch();
+  const [errors, setErrors] = useState({});
+  const [joinMessage, setJoinMessage] = useState('Hola, ¿me podrías llevar?');
   const token = useToken();
+  const [isJoinOpen, openJoin, closeJoin] = usePopUp();
 
-  const joinTrip = () => {
-    joinRide({
-      uri: `${serverHost}/ride/${id}/assign`,
-      headers: { authorization: token },
-      method: 'POST',
-      parse: false,
-    });
-  };
-
-  const leaveTrip = () => {
+  /* const leaveTrip = () => {
     leaveRide({
       uri: `${serverHost}/ride/${id}/assignment`,
       headers: { authorization: token },
       method: 'DELETE',
       parse: false,
     });
+  }; */
+
+  const handleJoinMessage = (e) => {
+    const { value } = e.target;
+    setJoinMessage(() => value);
+  };
+
+  const validateJoinMessage = () => {
+    const value = joinMessage;
+
+    if (!(value?.length > 0)) {
+      setErrors((lastVal) => ({ ...lastVal, joinMessage: 'Se necesita enviar un mensaje al conductor' }));
+      return false;
+    }
+
+    return true;
+  };
+
+  const clearError = (e) => {
+    setErrors((lastVal) => ({ ...lastVal, [e.target.name]: null }));
+  };
+
+  const joinTrip = () => {
+    if (!validateJoinMessage) return;
+    const body = { idRide: id, message: joinMessage };
+    joinRide({
+      uri: `${serverHost}/ride/request`,
+      headers: { authorization: token },
+      body: JSON.stringify(body),
+      method: 'POST',
+      parse: false,
+    });
   };
 
   useEffect(() => {
-    if (!resultPost && !resultDelete) return;
+    if (!resultPost) return;
+    closeJoin();
     callback();
-  }, [resultPost, resultDelete]);
+  }, [resultPost]);
+
+  useEffect(() => {
+    if (!isJoinOpen) return;
+    setJoinMessage('Hola, ¿me podrías llevar?');
+    setErrors({});
+  }, [isJoinOpen]);
+
+  useEffect(() => {
+  }, [joinMessage]);
 
   return (
     <div className={styles.tripContainer}>
@@ -102,7 +141,25 @@ function Trip({
         </div>
         )}
       </div>
-      {!owner && <Button className={styles.button} text={joined ? 'Salir' : 'Unirse'} red={joined} onClick={joined ? leaveTrip : joinTrip} disabled={loadingPost || loadingDelete} />}
+
+      {!owner && !joined && <Button className={styles.button} text="Solicitar unirse" onClick={openJoin} disabled={loadingPost} />}
+
+      {isJoinOpen && (
+        <PopUp close={closeJoin} closeButton>
+          <div className={styles.joinRequest}>
+            <p className={styles.popUpTitle}>Envía un mensaje al conductor del viaje</p>
+            <InputText
+              name="joinMessage"
+              value={joinMessage}
+              error={errors.joinMessage}
+              onChange={handleJoinMessage}
+              onBlur={validateJoinMessage}
+              onFocus={clearError}
+            />
+            <Button className={styles.joinButton} text="Enviar solicitud" onClick={joinTrip} disabled={loadingPost} />
+          </div>
+        </PopUp>
+      )}
     </div>
   );
 }

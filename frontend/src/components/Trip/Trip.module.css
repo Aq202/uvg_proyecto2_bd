@@ -52,3 +52,18 @@
     width: fit-content;
     margin: 10px 10px 0 auto;
 }
+
+.joinRequest{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.joinButton{
+    width: fit-content;
+    margin-top: 25px;
+}
+
+.popUpTitle{
+    margin: 0;
+}
