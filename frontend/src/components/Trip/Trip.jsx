@@ -12,6 +12,7 @@ import usePopUp from '../../hooks/usePopUp';
 import InputText from '../InputText';
 import InputNumber from '../InputNumber/InputNumber';
 import InputCheck from '../InputCheck/InputCheck';
+import { button, green } from '../../styles/buttons.module.css';
 
 function Trip({
   id,
@@ -38,6 +39,7 @@ function Trip({
 }) {
   const { callFetch: joinRide, result: resultPost, loading: loadingPost } = useFetch();
   const { callFetch: acceptRequest, result: resultAccept, loading: loadingAccept } = useFetch();
+  const { callFetch: acceptAll, result: resultAcceptAll, loading: loadingAcceptAll } = useFetch();
   const { callFetch: submitRating, result: resultRating, loading: loadingRating } = useFetch();
   const { callFetch: submitComment, result: resultComment, loading: loadingComment } = useFetch();
   const { callFetch: submitStart, result: resultStart, loading: loadingStart } = useFetch();
@@ -183,6 +185,15 @@ function Trip({
     });
   };
 
+  const assignAll = (rideId) => {
+    acceptAll({
+      uri: `${serverHost}/ride/${rideId}/assignAll`,
+      headers: { authorization: token },
+      method: 'POST',
+      parse: false,
+    });
+  };
+
   const postRating = () => {
     if (!validateRating) return;
     const body = { idRide: id, rating };
@@ -245,10 +256,10 @@ function Trip({
   }, [resultPost]);
 
   useEffect(() => {
-    if (!resultAccept) return;
+    if (!resultAccept && !resultAcceptAll) return;
     closeRequests();
     callback();
-  }, [resultAccept]);
+  }, [resultAccept, resultAcceptAll]);
 
   useEffect(() => {
     if (!resultRating) return;
@@ -392,6 +403,14 @@ function Trip({
               <div className={styles.requestContainerTitle}>
                 <p className={styles.requestTitle}>Solicitante</p>
                 <p className={styles.requestTitle}>Mensaje</p>
+                <button
+                  className={`${button} ${green} ${styles.acceptAll}`}
+                  type="button"
+                  onClick={() => assignAll(id)}
+                  disabled={loadingAcceptAll}
+                >
+                  Aceptar todos
+                </button>
               </div>
             )}
             {requests
