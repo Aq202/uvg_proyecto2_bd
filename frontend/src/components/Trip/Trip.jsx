@@ -357,7 +357,6 @@ function Trip({
 
       {!owner && !joined && !completed && <Button className={styles.button} text="Solicitar unirse" onClick={openJoin} disabled={loadingPost} />}
       {!owner && joined && <Button className={styles.button} text="Enviar comentarios" onClick={openComment} disabled={loadingPost} />}
-      {owner && <Button className={styles.button} text="Solicitudes de pasajeros" onClick={openRequests} disabled={loadingPost} />}
       {owner && <Button className={styles.button} text={started ? 'Finalizar viaje' : 'Iniciar viaje'} onClick={started ? openEnd : openStart} disabled={loadingPost} />}
       {owner && (
         <div className={styles.actionsContainer}>
