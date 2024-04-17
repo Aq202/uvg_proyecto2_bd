@@ -205,7 +205,6 @@ function UserTrips() {
 
   const refreshTrips = () => {
     setTrips([]);
-    setFilters({});
     getUserTrips();
   };
 

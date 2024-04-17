@@ -12,6 +12,9 @@ import useFetch from '../../hooks/useFetch';
 import useToken from '../../hooks/useToken';
 import { serverHost } from '../../config';
 import countries from '../../assets/countries.ts';
+import InputTime from '../InputTime/InputTime';
+import InputNumber from '../InputNumber/InputNumber';
+import InputCheck from '../InputCheck/InputCheck';
 
 function Places() {
   const [filters, setFilters] = useState({});
@@ -19,7 +22,9 @@ function Places() {
   const [currentPage, setCurrentPage] = useState(0);
   const [isEditOpen, openEdit, closeEdit] = usePopUp();
   const [placeToEdit, setPlaceToEdit] = useState(false);
-  const [placeToCreate, setPlaceToCreate] = useState(false);
+  const [placeToCreate, setPlaceToCreate] = useState(
+    { parking: false, dangerArea: false, urbanArea: false },
+  );
   const [isCreateOpen, openCreate, closeCreate] = usePopUp();
   const [errors, setErrors] = useState({});
   const {
@@ -31,8 +36,8 @@ function Places() {
   const { callFetch: putLocation, result: resultPut, loading: loadingPut } = useFetch();
   const { callFetch: postLocation, result: resultPost, loading: loadingPost } = useFetch();
   const { callFetch: deleteLocation, result: resultDelete } = useFetch();
-  const { callFetch: fetchCountries, result: resultCountries } = useFetch();
   const { callFetch: fetchCities, result: resultCities } = useFetch();
+  const [cities, setCities] = useState([]);
 
   const token = useToken();
 
@@ -58,6 +63,24 @@ function Places() {
     return true;
   };
 
+  const validateOpenTime = (value) => {
+    if (!(value?.length > 0)) {
+      setErrors((lastVal) => ({ ...lastVal, openTime: 'Se necesita una hora de apertura' }));
+      return false;
+    }
+
+    return true;
+  };
+
+  const validateCloseTime = (value) => {
+    if (!(value?.length > 0)) {
+      setErrors((lastVal) => ({ ...lastVal, closeTime: 'Se necesita una hora de cierre' }));
+      return false;
+    }
+
+    return true;
+  };
+
   const validateCountry = (value) => {
     if (!(value?.length > 0)) {
       setErrors((lastVal) => ({ ...lastVal, country: 'Se necesita un país para el lugar' }));
@@ -69,7 +92,16 @@ function Places() {
 
   const validateCity = (value) => {
     if (!(value?.length > 0)) {
-      setErrors((lastVal) => ({ ...lastVal, city: 'Se necesita un país para el lugar' }));
+      setErrors((lastVal) => ({ ...lastVal, cityId: 'Se necesita una ciudad para el lugar' }));
+      return false;
+    }
+
+    return true;
+  };
+
+  const validateDistance = (value) => {
+    if (!(value?.length > 0)) {
+      setErrors((lastVal) => ({ ...lastVal, distanceFromCityCenter: 'Se necesita una distancia desde el centro' }));
       return false;
     }
 
@@ -83,28 +115,20 @@ function Places() {
   };
 
   const getLocations = () => {
-    const { country, city } = filters;
-    const paramsObj = { page: currentPage };
+    // Ya no hay filtros
+    // const { country, city } = filters;
+    // const paramsObj = { page: currentPage };
 
-    if (country !== undefined && country !== '') {
+    /* if (country !== undefined && country !== '') {
       paramsObj.country = country;
     }
 
     if (city !== undefined && city !== '') {
       paramsObj.city = city;
-    }
-
-    const searchParams = new URLSearchParams(paramsObj);
+    } */
 
     fetchLocations({
-      uri: `${serverHost}/location?${searchParams.toString()}`,
-      headers: { authorization: token },
-    });
-  };
-
-  const getCountries = () => {
-    fetchCountries({
-      uri: `${serverHost}/location/countries?fromUser=true`,
+      uri: `${serverHost}/location`,
       headers: { authorization: token },
     });
   };
@@ -148,7 +172,10 @@ function Places() {
     let hasError = false;
 
     if (!validateAddress(placeToCreate.address)) hasError = true;
-    if (!validateCity(placeToCreate.city)) hasError = true;
+    if (!validateOpenTime(placeToCreate.openTime)) hasError = true;
+    if (!validateCloseTime(placeToCreate.closeTime)) hasError = true;
+    if (!validateCity(placeToCreate.cityId)) hasError = true;
+    if (!validateDistance(placeToCreate.distanceFromCityCenter)) hasError = true;
     if (!validateCountry(placeToCreate.country)) hasError = true;
     if (!validateName(placeToCreate.name)) hasError = true;
 
@@ -176,13 +203,9 @@ function Places() {
   };
 
   const handleCreateFormChange = (e) => {
-    const { name, value } = e.target;
+    const { name } = e.target;
+    const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
     setPlaceToCreate((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleFilterChange = (e) => {
-    const { name, value } = e.target;
-    setFilters((prev) => ({ ...prev, [name]: value }));
   };
 
   const handlePageChange = (e, page) => {
@@ -196,7 +219,7 @@ function Places() {
 
   useEffect(() => {
     if (resultGet) {
-      setPlaces(resultGet.result);
+      setPlaces(resultGet);
     }
   }, [resultGet]);
 
@@ -213,19 +236,29 @@ function Places() {
   }, [resultPut, resultDelete, resultPost]);
 
   useEffect(() => {
-    if (!isCreateOpen && !isEditOpen) return;
     setErrors({});
-    setPlaceToCreate({});
+    setPlaceToCreate({ parking: false, dangerArea: false, urbanArea: false });
+    setCities([]);
   }, [isCreateOpen, isEditOpen]);
 
   useEffect(() => {
-    getLocations();
-    getCountries();
-  }, []);
+    if (placeToCreate.country !== undefined && placeToCreate.country !== '') getCities(placeToCreate.country);
+  }, [placeToCreate.country]);
 
   useEffect(() => {
-    if (filters.country !== undefined && filters.country !== '') getCities(filters.country);
-  }, [filters.country]);
+    if (!resultCities) {
+      setCities([]);
+      if (isCreateOpen) {
+        setPlaceToCreate((prev) => ({ ...prev, city: '' }));
+      }
+      return;
+    }
+    setCities(resultCities);
+  }, [resultCities]);
+
+  useEffect(() => {
+    console.log(placeToCreate);
+  }, [placeToCreate]);
 
   return (
     <div className={styles.mainContainer}>
@@ -235,51 +268,24 @@ function Places() {
 
         <Button text="Nuevo" className={styles.newButton} onClick={openCreate} />
 
-        <div className={styles.filtersContainer}>
-
-          {resultCountries && (
-            <div className={styles.filterContainer}>
-              <InputSelect
-                options={resultCountries.map((country) => (
-                  { value: country, title: country }))}
-                name="country"
-                onChange={handleFilterChange}
-                placeholder="País"
-                value={filters?.country}
-              />
-            </div>
-          )}
-
-          {resultCities && (
-            <div className={styles.filterContainer}>
-              <InputSelect
-                options={filters.country !== undefined && filters.countries !== '' && resultCities
-                  ? resultCities.map((city) => ({ value: city.city, title: city.city }))
-                  : []}
-                name="city"
-                onChange={handleFilterChange}
-                placeholder="Ciudad"
-                value={filters?.city}
-              />
-            </div>
-          )}
-
-        </div>
       </div>
 
       {!errorGet && (
         <div className={styles.placesContainer}>
           {places?.map((place) => (
             <Place
-              location={`${place.city}, ${place.country}`}
+              location={`${place.city.name}, ${place.city.country}`}
               name={place.name}
               address={place.address}
+              parking={place.parking}
+              openTime={place.openTime}
+              closeTime={place.closeTime}
               editPlace={() => editPlace(
                 place.id,
                 place.name,
                 place.address,
-                place.city,
-                place.country,
+                place.city.name,
+                place.city.country,
               )}
               deletePlace={() => deletePlace(place.id)}
             />
@@ -363,6 +369,26 @@ function Places() {
             onBlur={() => validateAddress(placeToCreate.address)}
             onFocus={clearError}
           />
+          <div className={styles.timesSection}>
+            <InputTime
+              title="Hora de apertura"
+              name="openTime"
+              value={placeToCreate.openTime}
+              onChange={handleCreateFormChange}
+              error={errors.openTime}
+              onBlur={() => validateOpenTime(placeToCreate.openTime)}
+              onFocus={clearError}
+            />
+            <InputTime
+              title="Hora de cierre"
+              name="closeTime"
+              value={placeToCreate.closeTime}
+              onChange={handleCreateFormChange}
+              error={errors.closeTime}
+              onBlur={() => validateCloseTime(placeToCreate.closeTime)}
+              onFocus={clearError}
+            />
+          </div>
           <InputSelect
             title="País"
             className={styles.inputSelect}
@@ -375,14 +401,48 @@ function Places() {
             onBlur={() => validateCountry(placeToCreate.country)}
             onFocus={clearError}
           />
-          <InputText
-            title="Ciudad"
-            name="city"
-            value={placeToCreate.city}
+          {cities.length > 0 && (
+            <>
+              <InputSelect
+                title="Ciudad"
+                className={styles.inputSelect}
+                options={cities.map((city) => (
+                  { value: city.id, title: city.name }))}
+                name="cityId"
+                value={placeToCreate.cityId}
+                onChange={handleCreateFormChange}
+                error={errors.cityId}
+                onBlur={() => validateCity(placeToCreate.cityId)}
+                onFocus={clearError}
+              />
+              <InputNumber
+                title="Distancia desde el centro (km)"
+                name="distanceFromCityCenter"
+                value={placeToCreate.distanceFromCityCenter}
+                onChange={handleCreateFormChange}
+                error={errors.distanceFromCityCenter}
+                onBlur={() => validateDistance(placeToCreate.distanceFromCityCenter)}
+                onFocus={clearError}
+              />
+            </>
+          )}
+          <InputCheck
+            title="El lugar cuenta con parqueo"
+            name="parking"
+            value={placeToCreate.parking}
             onChange={handleCreateFormChange}
-            error={errors.city}
-            onBlur={() => validateCity(placeToCreate.city)}
-            onFocus={clearError}
+          />
+          <InputCheck
+            title="El lugar se encuentra en una zona roja"
+            name="dangerArea"
+            value={placeToCreate.dangerArea}
+            onChange={handleCreateFormChange}
+          />
+          <InputCheck
+            title="El lugar se encuentra en un área urbana"
+            name="urbanArea"
+            value={placeToCreate.urbanArea}
+            onChange={handleCreateFormChange}
           />
           <Button text="Crear" className={styles.updateButton} onClick={createLocation} disabled={loadingPost} />
         </div>

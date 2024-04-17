@@ -65,7 +65,6 @@ function FindTrips() {
 
   const refreshTrips = () => {
     setTrips([]);
-    setFilters({});
     getTrips();
   };
 
