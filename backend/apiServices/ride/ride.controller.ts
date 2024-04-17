@@ -140,14 +140,31 @@ const assignUserToRideController = async (req: AppRequest, res: AppResponse) => 
 		});
 	}
 };
+const acceptAllUserRequestsController = async (req: AppRequest, res: AppResponse) => {
+	if (!req.session) return;
+	try {
+		const { idRide } = req.params;
+		const sessionIdUser = req.session.id;
+
+			await assignUserToRide({ idRide, sessionIdUser });
+
+		res.send({ ok: true });
+	} catch (ex) {
+		await errorSender({
+			res,
+			ex,
+			defaultError: "Ocurrio un error al aceptar todas las solicitudes de un viaje.",
+		});
+	}
+};
 
 const removeUserFromRideController = async (req: AppRequest, res: AppResponse) => {
 	const user = req.session;
 	if (!user) return;
 	try {
-		const { idRide } = req.params;
+		const { idRide, idUser } = req.params;
 
-		await removeUserFromRide({ idUser: user.id, idRide });
+		await removeUserFromRide({ idUser, idRide, sessionIdUser: user.id });
 
 		res.send({ ok: true });
 	} catch (ex) {
@@ -155,6 +172,23 @@ const removeUserFromRideController = async (req: AppRequest, res: AppResponse) =
 			res,
 			ex,
 			defaultError: "Ocurrio un error al desasignar usuario de viaje.",
+		});
+	}
+};
+const removeAllPassengersFromRideController = async (req: AppRequest, res: AppResponse) => {
+	const user = req.session;
+	if (!user) return;
+	try {
+		const { idRide } = req.params;
+
+		await removeUserFromRide({  idRide, sessionIdUser: user.id });
+
+		res.send({ ok: true });
+	} catch (ex) {
+		await errorSender({
+			res,
+			ex,
+			defaultError: "Ocurrio un error al desasignar todos los usuario de viaje.",
 		});
 	}
 };
@@ -309,5 +343,6 @@ export {
 	getRideController,
 	deleteRideController,
 	deleteAllUserRidesController,
-
+	acceptAllUserRequestsController,
+	removeAllPassengersFromRideController
 };
