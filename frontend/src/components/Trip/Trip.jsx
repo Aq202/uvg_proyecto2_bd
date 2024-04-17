@@ -34,14 +34,17 @@ function Trip({
   const { callFetch: joinRide, result: resultPost, loading: loadingPost } = useFetch();
   const { callFetch: acceptRequest, result: resultAccept, loading: loadingAccept } = useFetch();
   const { callFetch: submitRating, result: resultRating, loading: loadingRating } = useFetch();
+  const { callFetch: submitComment, result: resultComment, loading: loadingComment } = useFetch();
   // const { callFetch: leaveRide, result: resultDelete, loading: loadingDelete } = useFetch();
   const [errors, setErrors] = useState({});
   const [joinMessage, setJoinMessage] = useState('Hola, ¿me podrías llevar?');
+  const [passengerComment, setPassengerComment] = useState('¡Gracias por aceptarme!');
   const [rating, setRating] = useState(5);
   const token = useToken();
   const [isJoinOpen, openJoin, closeJoin] = usePopUp();
   const [isRequestsOpen, openRequests, closeRequests] = usePopUp();
   const [isRatingOpen, openRating, closeRating] = usePopUp();
+  const [isCommentOpen, openComment, closeComment] = usePopUp();
 
   /* const leaveTrip = () => {
     leaveRide({
@@ -57,6 +60,11 @@ function Trip({
     setJoinMessage(() => value);
   };
 
+  const handleComment = (e) => {
+    const { value } = e.target;
+    setPassengerComment(() => value);
+  };
+
   const handleRating = (e) => {
     const { value } = e.target;
     setRating(() => value);
@@ -67,6 +75,16 @@ function Trip({
 
     if (!(value?.length > 0)) {
       setErrors((lastVal) => ({ ...lastVal, joinMessage: 'Se necesita enviar un mensaje al conductor' }));
+      return false;
+    }
+
+    return true;
+  };
+  const validateComment = () => {
+    const value = passengerComment;
+
+    if (!(value?.length > 0)) {
+      setErrors((lastVal) => ({ ...lastVal, passengerComment: 'Se necesita un comentario para enviar al conductor' }));
       return false;
     }
 
@@ -121,6 +139,18 @@ function Trip({
     });
   };
 
+  const postComment = () => {
+    if (!validateRating) return;
+    const body = { idRide: id, comment: passengerComment };
+    submitComment({
+      uri: `${serverHost}/ride/comment`,
+      headers: { authorization: token },
+      body: JSON.stringify(body),
+      method: 'POST',
+      parse: false,
+    });
+  };
+
   useEffect(() => {
     if (!resultPost) return;
     closeJoin();
@@ -140,6 +170,12 @@ function Trip({
   }, [resultRating]);
 
   useEffect(() => {
+    if (!resultComment) return;
+    closeComment();
+    callback();
+  }, [resultComment]);
+
+  useEffect(() => {
     if (!isJoinOpen) return;
     setJoinMessage('Hola, ¿me podrías llevar?');
     setErrors({});
@@ -150,6 +186,12 @@ function Trip({
     setRating(5);
     setErrors({});
   }, [isRatingOpen]);
+
+  useEffect(() => {
+    if (!isCommentOpen) return;
+    setPassengerComment('¡Gracias por aceptarme!');
+    setErrors({});
+  }, [isCommentOpen]);
 
   return (
     <div className={styles.tripContainer}>
@@ -203,6 +245,7 @@ function Trip({
       </div>
 
       {!owner && !joined && <Button className={styles.button} text="Solicitar unirse" onClick={openJoin} disabled={loadingPost} />}
+      {!owner && joined && <Button className={styles.button} text="Enviar comentarios" onClick={openComment} disabled={loadingPost} />}
       {owner && <Button className={styles.button} text="Solicitudes de pasajeros" onClick={openRequests} disabled={loadingPost} />}
       {!owner && completed && <Button className={styles.button} text="Calificar viaje" onClick={openRating} disabled={loadingPost} />}
 
@@ -251,7 +294,7 @@ function Trip({
       )}
       {isRatingOpen && (
         <PopUp close={closeRating} closeWithBackground>
-          <div className={styles.requestPopup}>
+          <div className={styles.ratingPopup}>
             <p className={styles.popUpTitle}>
               ¿Cómo estuvo este viaje siendo pasajero?
             </p>
@@ -264,8 +307,26 @@ function Trip({
               onBlur={() => validateRating}
               onFocus={clearError}
             />
+            <Button className={styles.joinButton} text="Enviar calificación" onClick={postRating} disabled={loadingRating} />
           </div>
-          <Button className={styles.joinButton} text="Enviar calificación" onClick={postRating} disabled={loadingRating} />
+        </PopUp>
+      )}
+      {isCommentOpen && (
+        <PopUp close={closeComment} closeWithBackground>
+          <div className={styles.joinRequest}>
+            <p className={styles.popUpTitle}>
+              Envía un comentario al conductor del viaje que te aceptó como pasajero
+            </p>
+            <InputText
+              name="passengerComment"
+              value={passengerComment}
+              error={errors.passengerComment}
+              onChange={handleComment}
+              onBlur={validateComment}
+              onFocus={clearError}
+            />
+            <Button className={styles.joinButton} text="Enviar comentario" onClick={postComment} disabled={loadingComment} />
+          </div>
         </PopUp>
       )}
     </div>
