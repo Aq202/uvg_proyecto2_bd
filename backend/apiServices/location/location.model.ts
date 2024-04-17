@@ -101,6 +101,9 @@ const updateLocation = async ({
 	parking = null,
 	openTime = null,
 	closeTime = null,
+	distanceFromCityCenter = null,
+	dangerArea = null,
+	urbanArea = null,
 }: {
 	idLocation: string;
 	name?: string | null;
@@ -108,16 +111,21 @@ const updateLocation = async ({
 	parking?: boolean | null;
 	openTime?: string | null;
 	closeTime?: string | null;
+	distanceFromCityCenter?: string	| null;
+	dangerArea?: boolean | null;
+	urbanArea?: boolean | null;
 }) => {
 	const session = Connection.driver.session();
-
 	const result = await session.run(
-		`	MATCH (l:Location {id:$idLocation})
+		`	MATCH (l:Location {id:$idLocation})-[l_rel:located_at]->(:City)
 			SET l.name = COALESCE($name, l.name),
 					l.address = COALESCE($address, l.address),
 					l.parking = COALESCE($parking, l.parking),
 					l.openTime = COALESCE($openTime, l.openTime),
-					l.closeTime = COALESCE($closeTime, l.closeTime)
+					l.closeTime = COALESCE($closeTime, l.closeTime),
+					l_rel.distanceFromCityCenter = COALESCE($distanceFromCityCenter, l_rel.distanceFromCityCenter),
+					l_rel.dangerArea = COALESCE($dangerArea, l_rel.dangerArea),
+					l_rel.urbanArea = COALESCE($urbanArea, l_rel.urbanArea)
 			RETURN l`,
 		{
 			idLocation,
@@ -126,6 +134,11 @@ const updateLocation = async ({
 			parking: exists(parking) ? parseBoolean(parking) : null,
 			openTime,
 			closeTime,
+			distanceFromCityCenter,
+			dangerArea:exists(dangerArea) ? parseBoolean(dangerArea) : null,
+			urbanArea:exists(urbanArea) ? parseBoolean(urbanArea) : null,
+			
+		
 		}
 	);
 
