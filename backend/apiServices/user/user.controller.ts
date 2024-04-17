@@ -1,7 +1,7 @@
 import { signToken } from "../../services/jwt.js";
 import errorSender from "../../utils/errorSender.js";
 import exists from "../../utils/exists.js";
-import { addFriend, authenticate, createManyUsers, createUser, getUserById, updateUser, updateUserSubdocuments } from "./user.model.js";
+import { addFriend, authenticate, createManyUsers, createUser, getUserById, getUsersList, updateUser, updateUserSubdocuments } from "./user.model.js";
 import hash from "hash.js";
 import { connection } from "../../db/connection.js";
 import { GridFSBucket } from "mongodb";
@@ -166,6 +166,23 @@ const addFriendController = async (req: AppRequest, res: AppResponse) => {
 		});
 	}
 };
+
+const getUsersListController = async (req: AppRequest, res: AppResponse) => {
+	if (!req.session) return;
+	try {
+		const idUser = req.session.id;
+
+		const result = await getUsersList({idUser});
+
+		res.send(result);
+	} catch (ex) {
+		await errorSender({
+			res,
+			ex,
+			defaultError: "Ocurrio un error al obtener lista de usuarios.",
+		});
+	}
+};
 export {
 	createUserController,
 	loginController,
@@ -174,4 +191,5 @@ export {
 	getUserImageController,
 	uploadUsers,
 	addFriendController,
+	getUsersListController,
 };
