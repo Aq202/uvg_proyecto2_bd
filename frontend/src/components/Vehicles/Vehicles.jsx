@@ -165,10 +165,6 @@ function Vehicles() {
 
   const validateVehicleSince = () => {
     const fecha = new Date(newVehicle.since);
-    console.log(fecha > new Date());
-    console.log(fecha);
-    console.log(new Date());
-    console.log(newVehicle.since);
     if (newVehicle.since.length === 0 || fecha > new Date()) {
       setErrors((lastVal) => ({ ...lastVal, since: 'La fecha no es válida' }));
     }
