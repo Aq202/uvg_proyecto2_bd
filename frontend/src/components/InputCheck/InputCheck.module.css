@@ -1,0 +1,8 @@
+.inputCheckContainer {
+    display: flex;
+    width: 100%;
+    margin-top: 25px;
+    gap: 2%;
+    font-family: 'Montserrat';
+    font-size: 16px;
+}

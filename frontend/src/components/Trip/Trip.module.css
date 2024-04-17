@@ -52,3 +52,54 @@
     width: fit-content;
     margin: 10px 10px 0 auto;
 }
+
+.joinRequest{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.joinButton{
+    width: fit-content;
+    margin-top: 25px;
+}
+
+.popUpTitle{
+    margin: 0;
+    margin-bottom: 15px;
+}
+
+.requestPopup{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.ratingPopup{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.requestContainer{
+    display: flex;
+    width: 100%;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.requestContainerTitle{
+    display: flex;
+    width: 100%;
+    align-items: center;
+    gap: 33%
+}
+
+.requestButtonsContainer{
+    display: flex;
+    gap: 2%;
+}
+
+.requestTitle{
+    font-weight: 600;
+}

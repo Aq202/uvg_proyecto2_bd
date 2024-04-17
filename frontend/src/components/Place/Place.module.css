@@ -17,7 +17,17 @@
 }
 
 .location{
-    margin-bottom: 0;
+    margin-top: 0;
+    color: #5B5B5B;
+}
+
+.parking{
+    margin: 0;
+    color: #5B5B5B;
+}
+
+.schedule{
+    margin: 0;
     color: #5B5B5B;
 }
 

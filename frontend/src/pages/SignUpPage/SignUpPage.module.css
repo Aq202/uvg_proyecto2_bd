@@ -216,3 +216,8 @@
 .phone div:nth-child(2) {
     margin: 0;
 }
+
+.genderSelect{
+    width: 100%;
+    margin-top: 15px;
+}
