@@ -6,6 +6,7 @@ import {
 	assignHome,
 	createCity,
 	createLocation,
+	deleteContinentFromCities,
 	deleteLocation,
 	getCities,
 	getCountries,
@@ -79,7 +80,7 @@ const updateLocationController = async (req: AppRequest, res: AppResponse) => {
 			closeTime,
 		});
 
-		res.send({ok:true});
+		res.send({ ok: true });
 	} catch (ex) {
 		await errorSender({
 			res,
@@ -220,6 +221,22 @@ const updateCountryNameController = async (req: AppRequest, res: AppResponse) =>
 	}
 };
 
+const deleteContinentFromCitiesController = async (req: AppRequest, res: AppResponse) => {
+	try {
+		const { idCity } = req.query;
+
+		await deleteContinentFromCities({ idCity });
+
+		res.send({ ok: true });
+	} catch (ex) {
+		await errorSender({
+			res,
+			ex,
+			defaultError: "Ocurrio un error al eliminar continente de ciudades.",
+		});
+	}
+};
+
 export {
 	createCityController,
 	createLocationController,
@@ -231,4 +248,5 @@ export {
 	assignHomeController,
 	addContinentToCitiesController,
 	updateCountryNameController,
+	deleteContinentFromCitiesController,
 };

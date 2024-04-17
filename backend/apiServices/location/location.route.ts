@@ -7,6 +7,7 @@ import {
 	assignHomeController,
 	createCityController,
 	createLocationController,
+	deleteContinentFromCitiesController,
 	deleteLocationController,
 	getCitiesListController,
 	getCountriesListController,
@@ -23,6 +24,7 @@ const locationRouter = express.Router();
 locationRouter.post("/city", ensureAuth, validateBody(createCitySchema), createCityController)
 locationRouter.post("", ensureAuth, validateBody(createLocationSchema), createLocationController);
 locationRouter.patch("", ensureAuth, validateBody(updateLocationSchema), updateLocationController);
+locationRouter.delete("/continent", ensureAuth, deleteContinentFromCitiesController);
 locationRouter.delete("/:idLocation", ensureAuth, deleteLocationController);
 locationRouter.get("/", ensureAuth, getLocationsController);
 locationRouter.get("/countries", ensureAuth, getCountriesListController);

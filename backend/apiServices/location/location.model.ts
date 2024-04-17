@@ -290,6 +290,22 @@ const updateCountryName = async ({country, newName}:{country:string; newName: st
 
 }
 
+const deleteContinentFromCities = async ({idCity}: { idCity:string}) => {
+	const session = Connection.driver.session();
+
+	const result = await session.run(
+		`	MATCH (c:City ${idCity ? "{id:$idCity}": ""})
+			REMOVE c.continent
+			RETURN c`,
+		{ idCity }
+	);
+
+	if (result.records.length === 0) throw new CustomError("No se encontraron ciudades.", 404)
+
+	await session.close();
+
+}
+
 export {
 	createCity,
 	createLocation,
@@ -303,4 +319,5 @@ export {
 	getHome,
 	addContinentToCities,
 	updateCountryName,
+	deleteContinentFromCities,
 };
