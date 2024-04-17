@@ -1,9 +1,9 @@
 import LocationSchema from "../../db/schemas/location.schema.js";
 import Connection from "../../db_neo4j/connection.js";
 import CustomError from "../../utils/customError.js";
-import { someExists } from "../../utils/exists.js";
+import exists from "../../utils/exists.js";
 import generateId from "../../utils/generateId.js";
-import { createLocationDto } from "./location.dto.js";
+import parseBoolean from "../../utils/parseBoolean.js";
 
 const createCity = async ({
 	name,
@@ -65,12 +65,12 @@ const createLocation = async ({
 			cityId,
 			name,
 			address,
-			parking,
+			parking: parseBoolean(parking),
 			openTime,
 			closeTime,
 			distanceFromCityCenter,
-			dangerArea,
-			urbanArea,
+			dangerArea: parseBoolean(parking),
+			urbanArea: parseBoolean(parking),
 		}
 	);
 
@@ -95,32 +95,43 @@ const createLocation = async ({
 };
 
 const updateLocation = async ({
-	id,
-	name,
-	country,
-	city,
-	address,
-	idUser,
+	idLocation,
+	name = null,
+	address = null,
+	parking = null,
+	openTime = null,
+	closeTime = null,
 }: {
-	id: string;
-	name?: string;
-	country?: string;
-	city?: string;
-	address?: string;
-	idUser: string;
-}): Promise<AppLocation> => {
-	const location = await LocationSchema.findOne({ _id: id, idUser });
+	idLocation: string;
+	name?: string | null;
+	address?: string | null;
+	parking?: boolean | null;
+	openTime?: string | null;
+	closeTime?: string | null;
+}) => {
+	const session = Connection.driver.session();
 
-	if (!location) throw new CustomError("No se encontró la ubicación.", 404);
+	const result = await session.run(
+		`	MATCH (l:Location {id:$idLocation})
+			SET l.name = COALESCE($name, l.name),
+					l.address = COALESCE($address, l.address),
+					l.parking = COALESCE($parking, l.parking),
+					l.openTime = COALESCE($openTime, l.openTime),
+					l.closeTime = COALESCE($closeTime, l.closeTime)
+			RETURN l`,
+		{
+			idLocation,
+			name,
+			address,
+			parking: exists(parking) ? parseBoolean(parking) : null,
+			openTime,
+			closeTime,
+		}
+	);
 
-	if (name) location.name = name;
-	if (country) location.country = country;
-	if (city) location.city = city;
-	if (address) location.address = address;
+	if (result.records.length === 0) throw new CustomError("No se encontró la ubicación.", 404);
 
-	if (someExists(name, country, city, address)) await location.save();
-
-	return createLocationDto(location);
+	await session.close();
 };
 
 const deleteLocation = async ({ id, idUser }: { id: string; idUser: string }) => {

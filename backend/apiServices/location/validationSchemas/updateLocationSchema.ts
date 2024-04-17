@@ -1,10 +1,12 @@
 import yup from "yup";
-import validateId from "../../../utils/validateId.js";
 
 export default yup.object().shape({
-	id: yup
+	parking: yup
+		.boolean()
+		.nullable()
+		.typeError("El campo 'parking' debe tener un valor booleano."),
+	idLocation: yup
 		.string()
 		.nullable()
-		.required("El campo 'id' es obligatorio.")
-		.test("validate-id", "El id de la ubicación no es un id válido.", (id) => validateId(id)),
+		.required("El campo 'idLocation' es obligatorio.")
 });

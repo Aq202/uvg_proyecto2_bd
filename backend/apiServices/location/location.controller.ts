@@ -66,16 +66,19 @@ const createLocationController = async (req: AppRequest, res: AppResponse) => {
 	}
 };
 const updateLocationController = async (req: AppRequest, res: AppResponse) => {
-	const { id, name, country, city, address } = req.body;
+	const { idLocation, name, address, parking, openTime, closeTime } = req.body;
 
 	try {
-		if (!req.session) return;
+		await updateLocation({
+			idLocation,
+			name,
+			address,
+			parking,
+			openTime,
+			closeTime,
+		});
 
-		const idUser: string = req.session.id;
-
-		const location = await updateLocation({ id, name, country, city, address, idUser });
-
-		res.send(location);
+		res.send({ok:true});
 	} catch (ex) {
 		await errorSender({
 			res,
@@ -105,7 +108,6 @@ const deleteLocationController = async (req: AppRequest, res: AppResponse) => {
 };
 
 const getLocationsController = async (req: AppRequest, res: AppResponse) => {
-
 	try {
 		const result = await getLocations();
 
@@ -141,12 +143,13 @@ const getCountriesListController = async (req: AppRequest, res: AppResponse) => 
 };
 const getCitiesListController = async (req: AppRequest, res: AppResponse) => {
 	if (!req.session) return;
-	const {  country } = req.query;
+	const { country } = req.query;
 
 	try {
 		const result = await getCities(country);
 
-		if (!result || !(result.length > 0)) throw new CustomError("No se encontraron resultados.", 404);
+		if (!result || !(result.length > 0))
+			throw new CustomError("No se encontraron resultados.", 404);
 		res.send(result);
 	} catch (ex) {
 		await errorSender({
@@ -160,14 +163,14 @@ const getCitiesListController = async (req: AppRequest, res: AppResponse) => {
 const assignHomeController = async (req: AppRequest, res: AppResponse) => {
 	if (!req.session) return;
 	try {
-		const {  idLocation, isOwner, postalCode, livesAlone } = req.body;
+		const { idLocation, isOwner, postalCode, livesAlone } = req.body;
 		const idUser = req.session.id;
 
-
 		// Verificar si existe la ubicación
-		if (!(await getLocationById(idLocation))) throw new CustomError("La ubicación no existe. ", 400);
+		if (!(await getLocationById(idLocation)))
+			throw new CustomError("La ubicación no existe. ", 400);
 
-		await assignHome({idUser, idLocation, isOwner, postalCode, livesAlone})
+		await assignHome({ idUser, idLocation, isOwner, postalCode, livesAlone });
 
 		res.send({ ok: true });
 	} catch (ex) {
@@ -183,11 +186,10 @@ const addContinentToCitiesController = async (req: AppRequest, res: AppResponse)
 	try {
 		const { country, continent } = req.body;
 
-
 		if (!country) throw new CustomError("El campo 'country' es obligatorio. ", 400);
 		if (!continent) throw new CustomError("El campo 'continent' es obligatorio. ", 400);
 
-		await addContinentToCities({country, continent})
+		await addContinentToCities({ country, continent });
 
 		res.send({ ok: true });
 	} catch (ex) {
@@ -208,5 +210,5 @@ export {
 	getCountriesListController,
 	getCitiesListController,
 	assignHomeController,
-	addContinentToCitiesController
+	addContinentToCitiesController,
 };
