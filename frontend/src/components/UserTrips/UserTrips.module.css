@@ -80,3 +80,9 @@
         margin-left: 0;
     }
 }
+
+.timesSection{
+    display: flex;
+    width: 100%;
+    gap: 2%;
+}

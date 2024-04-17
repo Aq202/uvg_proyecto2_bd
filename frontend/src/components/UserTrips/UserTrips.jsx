@@ -11,21 +11,31 @@ import Button from '../Button';
 import InputDate from '../InputDate';
 import PopUp from '../PopUp/PopUp';
 import usePopUp from '../../hooks/usePopUp';
-import InputText from '../InputText';
 import Spinner from '../Spinner';
 import countries from '../../assets/countries.ts';
+import InputTime from '../InputTime/InputTime';
+import InputCheck from '../InputCheck/InputCheck';
+import InputNumber from '../InputNumber/InputNumber';
 
 function UserTrips() {
   const [filters, setFilters] = useState({ role: 'driver', order: -1 });
   const [currentPage, setCurrentPage] = useState(0);
   const [trips, setTrips] = useState([]);
-  const [rideToCreate, setRideToCreate] = useState(false);
+  const [rideToCreate, setRideToCreate] = useState(
+    { allowsLuggage: false, allowsMusic: false },
+  );
   const [isCreateOpen, openCreate, closeCreate] = usePopUp();
   const {
     callFetch: fetchLocationsCreate,
     result: resultGetLocationsCreate,
     error: errorGetLocationsCreate,
     loading: loadingGetLocationsCreate,
+  } = useFetch();
+  const {
+    callFetch: fetchVehicles,
+    result: resultGetVehicles,
+    error: errorGetVehicles,
+    loading: loadingGetVehicles,
   } = useFetch();
   const {
     callFetch: getRides,
@@ -87,33 +97,22 @@ function UserTrips() {
     return true;
   };
 
-  const validateVehicleType = () => {
-    const value = rideToCreate.vehicleType;
-
-    if (!(value?.length > 0)) {
-      setErrors((lastVal) => ({ ...lastVal, vehicleType: 'Se necesita un tipo de vehículo' }));
-      return false;
-    }
-
-    return true;
-  };
-
   const validateVehicleId = () => {
-    const value = rideToCreate.vehicleIdentification;
+    const value = rideToCreate.vehicleId;
 
     if (!(value?.length > 0)) {
-      setErrors((lastVal) => ({ ...lastVal, vehicleIdentification: 'Se necesita un número de placa' }));
+      setErrors((lastVal) => ({ ...lastVal, vehicleId: 'Se necesita un vehículo' }));
       return false;
     }
 
     return true;
   };
 
-  const validateVehicleColor = () => {
-    const value = rideToCreate.vehicleColor;
+  const validateStart = () => {
+    const value = rideToCreate.start;
 
     if (!(value?.length > 0)) {
-      setErrors((lastVal) => ({ ...lastVal, vehicleColor: 'Se necesita un color de vehículo' }));
+      setErrors((lastVal) => ({ ...lastVal, start: 'Se necesita una hora de salida' }));
       return false;
     }
 
@@ -121,10 +120,30 @@ function UserTrips() {
   };
 
   const validateDate = () => {
-    const value = rideToCreate.datetime;
+    const value = rideToCreate.date;
 
     if (!(value?.length > 0)) {
-      setErrors((lastVal) => ({ ...lastVal, datetime: 'Se necesita una fecha de salida' }));
+      setErrors((lastVal) => ({ ...lastVal, date: 'Se necesita una fecha de salida' }));
+      return false;
+    }
+
+    return true;
+  };
+
+  const validateArrival = () => {
+    const value = rideToCreate.arrival;
+    if (!(value?.length > 0)) {
+      setErrors((lastVal) => ({ ...lastVal, arrival: 'Se necesita una hora de llegada' }));
+      return false;
+    }
+
+    return true;
+  };
+
+  const validateCapacity = () => {
+    const value = rideToCreate.remainingSpaces;
+    if (!(value?.length > 0)) {
+      setErrors((lastVal) => ({ ...lastVal, remainingSpaces: 'Se necesita una capacidad de pasajeros' }));
       return false;
     }
 
@@ -170,7 +189,14 @@ function UserTrips() {
 
   const getLocationsCreate = () => {
     fetchLocationsCreate({
-      uri: `${serverHost}/location?`,
+      uri: `${serverHost}/location`,
+      headers: { authorization: token },
+    });
+  };
+
+  const getVehiclesCreate = () => {
+    fetchVehicles({
+      uri: `${serverHost}/vehicle`,
       headers: { authorization: token },
     });
   };
@@ -180,10 +206,11 @@ function UserTrips() {
 
     if (!validateArrivalLocation()) hasError = true;
     if (!validateStartLocation()) hasError = true;
+    if (!validateStart()) hasError = true;
+    if (!validateArrival()) hasError = true;
     if (!validateDate()) hasError = true;
     if (!validateVehicleId()) hasError = true;
-    if (!validateVehicleType()) hasError = true;
-    if (!validateVehicleColor()) hasError = true;
+    if (!validateCapacity()) hasError = true;
 
     if (hasError) return;
 
@@ -202,14 +229,10 @@ function UserTrips() {
   };
 
   const handleFormChange = (e) => {
-    const { name, value } = e.target;
+    const { name } = e.target;
+    const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
     setRideToCreate((prev) => ({ ...prev, [name]: value }));
   };
-
-  useEffect(() => {
-    if (!rideToCreate) return;
-    openCreate();
-  }, [rideToCreate]);
 
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
@@ -242,7 +265,8 @@ function UserTrips() {
   useEffect(() => {
     if (!isCreateOpen) return;
     getLocationsCreate();
-    setRideToCreate({});
+    getVehiclesCreate();
+    setRideToCreate({ allowsLuggage: false, allowsMusic: false });
     setErrors({});
   }, [isCreateOpen]);
 
@@ -355,14 +379,14 @@ function UserTrips() {
       {isCreateOpen && (
       <PopUp close={closeCreate} closeWithBackground>
         <div className={styles.createTrip}>
-          {resultGetLocationsCreate && (
+          {resultGetLocationsCreate && resultGetVehicles && (
             <>
               <h2 className={styles.creteTripTitle}>Crear viaje</h2>
               <p className={styles.createDescription}>Crea un viaje del que serás el conductor</p>
               <InputSelect
                 className={styles.inputSelect}
                 title="Lugar de salida"
-                options={resultGetLocationsCreate.result.map((location) => (
+                options={resultGetLocationsCreate.map((location) => (
                   { value: location.id, title: location.name }))}
                 name="idStartLocation"
                 value={rideToCreate.idStartLocation}
@@ -374,7 +398,7 @@ function UserTrips() {
               <InputSelect
                 className={styles.inputSelect}
                 title="Lugar de llegada"
-                options={resultGetLocationsCreate.result.map((location) => (
+                options={resultGetLocationsCreate.map((location) => (
                   { value: location.id, title: location.name }))}
                 name="idArrivalLocation"
                 value={rideToCreate.idArrivalLocation}
@@ -385,43 +409,63 @@ function UserTrips() {
               />
               <InputDate
                 title="Fecha de salida"
-                name="datetime"
+                name="date"
                 onChange={handleFormChange}
-                error={errors.datetime}
+                error={errors.date}
                 onBlur={validateDate}
                 onFocus={clearError}
               />
+              <div className={styles.timesSection}>
+                <InputTime
+                  title="Hora de salida"
+                  name="start"
+                  value={rideToCreate.start}
+                  onChange={handleFormChange}
+                  error={errors.start}
+                  onBlur={() => validateStart(rideToCreate.start)}
+                  onFocus={clearError}
+                />
+                <InputTime
+                  title="Hora de llegada"
+                  name="arrival"
+                  value={rideToCreate.arrival}
+                  onChange={handleFormChange}
+                  error={errors.arrival}
+                  onBlur={() => validateArrival(rideToCreate.arrival)}
+                  onFocus={clearError}
+                />
+              </div>
               <InputSelect
                 className={styles.inputSelect}
                 title="Vehículo de salida"
-                options={[
-                  { value: 'Sedan', title: 'Sedan' },
-                  { value: 'SUV', title: 'SUV' },
-                  { value: 'Pick-up', title: 'Pick-up' },
-                  { value: 'Otro', title: 'Otro' }]}
-                name="vehicleType"
-                value={rideToCreate.vehicleType}
+                options={resultGetVehicles.map((vehicle) => (
+                  { value: vehicle.identification, title: `${vehicle.brand} ${vehicle.model} ${vehicle.year}` }))}
+                name="vehicleId"
+                value={rideToCreate.vehicleId}
                 onChange={handleFormChange}
-                error={errors.vehicleType}
-                onBlur={validateVehicleType}
-                onFocus={clearError}
-              />
-              <InputText
-                title="Número de placa"
-                name="vehicleIdentification"
-                value={rideToCreate.vehicleIdentification}
-                onChange={handleFormChange}
-                error={errors.vehicleIdentification}
+                error={errors.vehicleId}
                 onBlur={validateVehicleId}
                 onFocus={clearError}
               />
-              <InputText
-                title="Color del vehículo"
-                name="vehicleColor"
-                value={rideToCreate.vehicleColor}
+              <InputCheck
+                title="Los pasajeros pueden llevar equipaje"
+                name="allowsLuggage"
+                value={rideToCreate.allowsLuggage}
                 onChange={handleFormChange}
-                error={errors.vehicleColor}
-                onBlur={validateVehicleColor}
+              />
+              <InputCheck
+                title="Está permitido reproducir música en el viaje"
+                name="allowsMusic"
+                value={rideToCreate.allowsMusic}
+                onChange={handleFormChange}
+              />
+              <InputNumber
+                title="Capacidad de pasajeros"
+                name="remainingSpaces"
+                value={rideToCreate.remainingSpaces}
+                onChange={handleFormChange}
+                error={errors.remainingSpaces}
+                onBlur={() => validateCapacity(rideToCreate.remainingSpaces)}
                 onFocus={clearError}
               />
               <Button text="Crear" className={styles.createButton} onClick={postTrip} disabled={loadingTrip} />
@@ -432,7 +476,12 @@ function UserTrips() {
             Aún no has registrado ninguna ubicación para tus viajes
           </p>
           )}
-          {loadingGetLocationsCreate && <Spinner />}
+          {errorGetVehicles && (
+          <p className={styles.createDescription}>
+            Aún no has registrado ningún vehículo para tus viajes
+          </p>
+          )}
+          {(loadingGetLocationsCreate || loadingGetVehicles) && <Spinner />}
         </div>
       </PopUp>
       )}
