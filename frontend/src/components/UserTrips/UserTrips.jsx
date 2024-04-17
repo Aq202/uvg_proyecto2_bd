@@ -7,6 +7,9 @@ import Trip from '../Trip';
 import useFetch from '../../hooks/useFetch';
 import useToken from '../../hooks/useToken';
 import { serverHost } from '../../config';
+import {
+  button, red,
+} from '../../styles/buttons.module.css';
 import Button from '../Button';
 import InputDate from '../InputDate';
 import PopUp from '../PopUp/PopUp';
@@ -46,6 +49,7 @@ function UserTrips() {
   const { callFetch: postRide, result: resultPost, loading: loadingTrip } = useFetch();
   const { callFetch: fetchCities, result: resultCities } = useFetch();
   const { callFetch: deleteUserTrip, result: resultDelete } = useFetch();
+  const { callFetch: deleteAllUserTrips, result: resultDeleteAll } = useFetch();
   const [errors, setErrors] = useState({});
 
   const token = useToken();
@@ -252,10 +256,10 @@ function UserTrips() {
   }, [resultGet]);
 
   useEffect(() => {
-    if (!resultDelete && !resultPost) return;
+    if (!resultDelete && !resultPost && !resultDeleteAll) return;
     closeCreate();
     refreshTrips();
-  }, [resultDelete, resultPost]);
+  }, [resultDelete, resultPost, resultDeleteAll]);
 
   useEffect(() => {
     if (filters.role === '') return;
@@ -289,6 +293,15 @@ function UserTrips() {
     });
   };
 
+  const deleteAllTrips = () => {
+    deleteAllUserTrips({
+      uri: `${serverHost}/ride`,
+      headers: { authorization: token },
+      method: 'DELETE',
+      parse: false,
+    });
+  };
+
   return (
     <div className={styles.mainContainer}>
 
@@ -297,6 +310,14 @@ function UserTrips() {
         <p className={styles.title}>Mis Viajes</p>
 
         <Button text="Nuevo" className={styles.newButton} onClick={openCreate} />
+        <button
+          style={{ marginLeft: '10px' }}
+          className={`${button} ${red}`}
+          onClick={deleteAllTrips}
+          type="button"
+        >
+          Eliminar todos
+        </button>
 
         <div className={styles.filtersContainer}>
 
