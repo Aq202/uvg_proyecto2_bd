@@ -100,6 +100,7 @@ const getRides = async ({
 			WITH collect(DISTINCT r) AS rides, count(DISTINCT r) as total
 			UNWIND rides as r
 			
+			OPTIONAL MATCH (d:Driver)-[drives_rel:drives]->(r)
 			OPTIONAL MATCH (r)-[has_rel:has]->(v:Vehicle)
 			OPTIONAL MATCH (r)-[starts_rel:starts]->(sl:Location)-[s_located_rel:located_at]->(sc:City)
 			OPTIONAL MATCH (r)-[addressed_rel:addressed_to]->(al:Location)-[a_located_rel:located_at]->(ac:City)
@@ -114,7 +115,8 @@ const getRides = async ({
 			ac AS arrival_city,
 			collect({user: u_req, rel: asks_rel}) AS requests, collect({user: u_req, rel: pass_rel}) AS passengers,
 			EXISTS((:Passenger {id:$idUser})-[:is_passenger]->(r)) AS is_passenger,
-			EXISTS((:Driver {id:$idUser})-[:drives]->(r)) AS is_driver
+			EXISTS((:Driver {id:$idUser})-[:drives]->(r)) AS is_driver,
+			d AS driver, drives_rel as driver_drives_ride_rel
 			
 			ORDER BY r.date ${order === 1 ? "ASC" : "DESC"}
 			${exists(page) ? "SKIP toInteger($skip) LIMIT toInteger($limit)" : ""}
@@ -134,6 +136,11 @@ const getRides = async ({
 	const rides = result.records.map((record) => {
 		const res = {
 			...record.get("ride").properties,
+			driver: {
+				...record.get("driver").properties,
+				...record.get("driver_drives_ride_rel").properties,
+				password: undefined,
+			},
 			vehicle: {
 				...record.get("vehicle").properties,
 				...record.get("ride_has_vehicle_rel").properties,
