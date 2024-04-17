@@ -67,6 +67,13 @@ function SignUpPage() {
     setErrors((lastVal) => ({ ...lastVal, name: 'El nombre es obligatorio.' }));
     return false;
   };
+
+  const validateGender = () => {
+    if (form?.gender?.trim().length > 0) return true;
+    setErrors((lastVal) => ({ ...lastVal, gender: 'El sexo es obligatorio.' }));
+    return false;
+  };
+
   const validateEmail = () => {
     // validate email format
     const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
@@ -124,12 +131,14 @@ function SignUpPage() {
     e.preventDefault();
     clearErrors();
     if (!(validateEmail() && validatePassword()
-      && validateName() && validatePhone() && validateRepeatedPassword())) return;
+      && validateName() && validatePhone()
+      && validateRepeatedPassword() && validateGender())) return;
     signup({
       name: form.name,
       email: form.email,
       phone: form.prefix + form.phone,
       password: form.password,
+      gender: form.gender,
       photo: form.photo,
     });
   };
@@ -191,6 +200,18 @@ function SignUpPage() {
               style={{ maxWidth: '560px', minWidth: 0 }}
             />
           </div>
+          <InputSelect
+            title="Sexo"
+            name="gender"
+            onChange={handleFormChange}
+            error={errors?.gender}
+            value={form?.gender}
+            onFocus={clearError}
+            onBlur={validateGender}
+            options={[{ title: 'Hombre', value: 'M' }, { title: 'Mujer', value: 'F' }]}
+            placeholder="Sexo"
+            className={styles.genderSelect}
+          />
           <InputText
             title="Contraseña"
             name="password"
