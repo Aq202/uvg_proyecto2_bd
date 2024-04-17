@@ -9,6 +9,7 @@ import useToken from '../../hooks/useToken';
 import { serverHost } from '../../config';
 import Spinner from '../Spinner';
 import Button from '../Button';
+import countries from '../../assets/countries.ts';
 
 function FindTrips() {
   const [filters, setFilters] = useState({ role: 'none', order: -1 });
@@ -20,17 +21,9 @@ function FindTrips() {
     loading: loadingGet,
   } = useFetch();
   const [trips, setTrips] = useState([]);
-  const { callFetch: fetchCountries, result: resultCountries } = useFetch();
   const { callFetch: fetchCities, result: resultCities } = useFetch();
 
   const token = useToken();
-
-  const getCountries = () => {
-    fetchCountries({
-      uri: `${serverHost}/location/countries`,
-      headers: { authorization: token },
-    });
-  };
 
   const getCities = (country) => {
     fetchCities({
@@ -95,7 +88,7 @@ function FindTrips() {
       hour: 'numeric',
       minute: '2-digit',
       hour12: true,
-      timeZone: 'UTC', // Asegura que la conversión se haga respecto a la hora UTC
+      // timeZone: 'GMT', // Asegura que la conversión se haga respecto a la hora UTC
     };
 
     // Puedes cambiar 'es' por el código de tu zona horaria local si necesitas otro idioma o formato
@@ -116,11 +109,6 @@ function FindTrips() {
     setTrips([]);
     getTrips();
   }, [currentPage, filters]);
-
-  useEffect(() => {
-    getTrips();
-    getCountries();
-  }, []);
 
   useEffect(() => {
     if (filters.country !== undefined && filters.country !== '') getCities(filters.country);
@@ -147,33 +135,6 @@ function FindTrips() {
             </Button>
           </div>
 
-          {resultCountries && (
-          <div className={styles.filterContainer}>
-            <InputSelect
-              options={resultCountries.map((country) => (
-                { value: country, title: country }))}
-              name="country"
-              onChange={handleFilterChange}
-              placeholder="País"
-              value={filters?.country}
-            />
-          </div>
-          )}
-
-          {resultCities && (
-            <div className={styles.filterContainer}>
-              <InputSelect
-                options={filters.country !== undefined && filters.countries !== '' && resultCities
-                  ? resultCities.map((city) => ({ value: city.city, title: city.city }))
-                  : []}
-                name="city"
-                onChange={handleFilterChange}
-                placeholder="Ciudad"
-                value={filters?.city}
-              />
-            </div>
-          )}
-
           <div className={styles.filterContainer}>
             <InputSelect
               options={[{ value: 'driver', title: 'Soy el conductor' }, { value: 'passenger', title: 'Soy pasajero' }, { value: 'none', title: 'Ninguno' }]}
@@ -186,22 +147,52 @@ function FindTrips() {
         </div>
       </div>
 
+      <div className={styles.filtersContainer}>
+        <div className={styles.filterContainer}>
+          <InputSelect
+            options={countries.map((country) => (
+              { value: country.name, title: country.name }))}
+            name="country"
+            onChange={handleFilterChange}
+            placeholder="País"
+            value={filters?.country}
+          />
+        </div>
+
+        {resultCities && (
+        <div className={styles.filterContainer}>
+          <InputSelect
+            options={filters.country !== undefined && filters.countries !== '' && resultCities
+              ? resultCities.map((city) => ({ value: city.name, title: city.name }))
+              : []}
+            name="city"
+            onChange={handleFilterChange}
+            placeholder="Ciudad"
+            value={filters?.city}
+          />
+        </div>
+        )}
+      </div>
+
       {!errorGet && (
         <div className={styles.tripsContainer}>
           {trips.map((trip) => (
             <Trip
               id={trip.id}
-              location={`${trip.arrivalLocation.city}, ${trip.arrivalLocation.country}`}
+              location={`${trip.arrivalLocation.city.name}, ${trip.arrivalLocation.city.country}`}
               originName={trip.startLocation.name}
               originAddress={trip.startLocation.address}
               destinationName={trip.arrivalLocation.name}
               destinationAddress={trip.arrivalLocation.address}
-              driver={trip.user.name}
-              passengers={trip.passengers.length}
-              time={readDate(trip.datetime)}
+              passengers={trip.passengers ? trip.passengers.length : 0}
+              startTime={typeof (trip.date) === 'string' ? `${trip.date}, ${trip.start}` : readDate(trip.start)}
+              arrivalTime={typeof (trip.date) === 'string' ? `${trip.date}, ${trip.arrival}` : readDate(trip.arrival)}
+              realStartTime={trip.startLocation.realStartTime ? readDate(trip.startLocation.realStartTime) : ''}
+              realArrivalTime={trip.arrivalLocation.realArrivalTime ? readDate(trip.arrivalLocation.realArrivalTime) : ''}
               joined={trip.isPassenger}
               callback={refreshTrips}
               owner={trip.isDriver}
+              driver={trip.driver?.name}
             />
           ))}
         </div>

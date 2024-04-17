@@ -135,7 +135,7 @@ function Places() {
 
   const getCities = (country) => {
     fetchCities({
-      uri: `${serverHost}/location/cities?fromUser=true&country=${country}`,
+      uri: `${serverHost}/location/cities?country=${country}`,
       headers: { authorization: token },
     });
   };

@@ -16,7 +16,11 @@ function Trip({
   destinationAddress,
   driver,
   passengers,
-  time,
+  startTime,
+  arrivalTime,
+  realStartTime,
+  realArrivalTime,
+  comment,
   joined,
   callback,
   owner,
@@ -72,9 +76,31 @@ function Trip({
           <p className={styles.infoDescription}>{passengers}</p>
         </div>
         <div className={styles.infoBlock}>
-          <p className={styles.infoTitle}>Salida:</p>
-          <p className={styles.infoDescription}>{time}</p>
+          <p className={styles.infoTitle}>Salida estimada:</p>
+          <p className={styles.infoDescription}>{startTime}</p>
         </div>
+        <div className={styles.infoBlock}>
+          <p className={styles.infoTitle}>Llegada estimada:</p>
+          <p className={styles.infoDescription}>{arrivalTime}</p>
+        </div>
+        {realStartTime && (
+        <div className={styles.infoBlock}>
+          <p className={styles.infoTitle}>Salida real:</p>
+          <p className={styles.infoDescription}>{realStartTime}</p>
+        </div>
+        )}
+        {realArrivalTime && (
+        <div className={styles.infoBlock}>
+          <p className={styles.infoTitle}>Llegada real:</p>
+          <p className={styles.infoDescription}>{realArrivalTime}</p>
+        </div>
+        )}
+        {comment && (
+        <div className={styles.comment}>
+          <p className={styles.infoTitle}>Información adicional:</p>
+          <p className={styles.infoDescription}>{comment}</p>
+        </div>
+        )}
       </div>
       {!owner && <Button className={styles.button} text={joined ? 'Salir' : 'Unirse'} red={joined} onClick={joined ? leaveTrip : joinTrip} disabled={loadingPost || loadingDelete} />}
     </div>
@@ -90,7 +116,11 @@ Trip.propTypes = {
   destinationAddress: PropTypes.string.isRequired,
   driver: PropTypes.string.isRequired,
   passengers: PropTypes.number.isRequired,
-  time: PropTypes.string.isRequired,
+  startTime: PropTypes.string.isRequired,
+  arrivalTime: PropTypes.string.isRequired,
+  realStartTime: PropTypes.string,
+  realArrivalTime: PropTypes.string,
+  comment: PropTypes.string,
   joined: PropTypes.bool.isRequired,
   callback: PropTypes.func.isRequired,
   owner: PropTypes.bool,
@@ -98,6 +128,9 @@ Trip.propTypes = {
 
 Trip.defaultProps = {
   owner: false,
+  realArrivalTime: '',
+  realStartTime: '',
+  comment: '',
 };
 
 export default Trip;
