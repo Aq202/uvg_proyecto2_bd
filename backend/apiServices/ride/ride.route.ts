@@ -6,6 +6,8 @@ import {
 	completePassengerParticipationController,
 	createRideController,
 	createRideRequestController,
+	deleteAllUserRidesController,
+	deleteRideController,
 	finishRideController,
 	getRideController,
 	getRidesController,
@@ -27,6 +29,8 @@ rideRouter.post("/", ensureAuth, validateBody(createRideSchema), createRideContr
 rideRouter.get("/", ensureAuth, getRidesController);
 rideRouter.get("/:idRide", ensureAuth, getRideController);
 rideRouter.post("/:idRide/assign/:idUser", ensureAuth, assignUserToRideController);
+rideRouter.delete("/", ensureAuth, deleteAllUserRidesController);
+rideRouter.delete("/:idRide", ensureAuth, deleteRideController);
 rideRouter.delete("/:idRide/assignment", ensureAuth, removeUserFromRideController);
 rideRouter.get("/user/top", ensureAuth, getTopUsersWithMostCompletedRidesController);
 rideRouter.post("/request", ensureAuth, validateBody(createRideRequestSchema), createRideRequestController);

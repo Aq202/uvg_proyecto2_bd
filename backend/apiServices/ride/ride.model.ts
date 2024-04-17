@@ -221,6 +221,32 @@ const assignUserToRide = async ({
 	await session.close();
 };
 
+const deleteRide = async ({
+	idUser,
+	idRide,
+}: {
+	idUser: string;
+	idRide?: string;
+}) => {
+	const session = Connection.driver.session();
+
+	const result = await session.run(
+		`	MATCH (u:Driver {id:$idUser})-[:drives]->(r:Ride ${idRide ? "{id:$idRide}" : ""})
+			DETACH DELETE r
+			RETURN u
+			`,
+		{
+			idUser,
+			idRide,
+		}
+	);
+
+	if (result.records.length === 0)
+		throw new CustomError("No se encontraron viajes para el usuario.", 400);
+
+	await session.close();
+};
+
 const removeUserFromRide = async ({ idUser, idRide }: { idUser: string; idRide: string }) => {
 	try {
 		const { acknowledged, matchedCount } = await RideSchema.updateOne(
@@ -448,4 +474,5 @@ export {
 	completePassengerParticipation,
 	startRide,
 	finishRide,
+	deleteRide,
 };

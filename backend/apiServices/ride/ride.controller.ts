@@ -11,6 +11,7 @@ import {
 	completePassengerParticipation,
 	createRide,
 	createRideRequest,
+	deleteRide,
 	finishRide,
 	getRides,
 	getTopUsersWithMostCompletedRides,
@@ -260,6 +261,39 @@ const finishRideController = async (req: AppRequest, res: AppResponse) => {
 		});
 	}
 };
+const deleteRideController = async (req: AppRequest, res: AppResponse) => {
+	const { idRide } = req.params;
+
+	try {
+		if (!req.session) return;
+		const idUser = req.session.id;
+
+		await deleteRide({idUser, idRide});
+		res.send({ ok: true });
+	} catch (ex) {
+		await errorSender({
+			res,
+			ex,
+			defaultError: "Ocurrio un error al eliminar el viaje.",
+		});
+	}
+};
+const deleteAllUserRidesController = async (req: AppRequest, res: AppResponse) => {
+
+	try {
+		if (!req.session) return;
+		const idUser = req.session.id;
+
+		await deleteRide({idUser});
+		res.send({ ok: true });
+	} catch (ex) {
+		await errorSender({
+			res,
+			ex,
+			defaultError: "Ocurrio un error al eliminar el viaje.",
+		});
+	}
+};
 
 export {
 	createRideController,
@@ -273,4 +307,7 @@ export {
 	startRideController,
 	finishRideController,
 	getRideController,
+	deleteRideController,
+	deleteAllUserRidesController,
+
 };
