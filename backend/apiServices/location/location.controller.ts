@@ -68,7 +68,17 @@ const createLocationController = async (req: AppRequest, res: AppResponse) => {
 	}
 };
 const updateLocationController = async (req: AppRequest, res: AppResponse) => {
-	const { idLocation, name, address, parking, openTime, closeTime } = req.body;
+	const {
+		idLocation,
+		name,
+		address,
+		parking,
+		openTime,
+		closeTime,
+		distanceFromCityCenter,
+		urbanArea,
+		dangerArea,
+	} = req.body;
 
 	try {
 		await updateLocation({
@@ -78,6 +88,9 @@ const updateLocationController = async (req: AppRequest, res: AppResponse) => {
 			parking,
 			openTime,
 			closeTime,
+			distanceFromCityCenter,
+			urbanArea,
+			dangerArea,
 		});
 
 		res.send({ ok: true });
