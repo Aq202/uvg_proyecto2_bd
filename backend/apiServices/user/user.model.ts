@@ -7,7 +7,9 @@ import exists, { someExists } from "../../utils/exists.js";
 import generateId from "../../utils/generateId.js";
 import { createUserDto, createMultipleUsersDto } from "./user.dto.js";
 
-const createManyUsers = async (users: { name: string, email: string, phone: string, password: string }[]) => {
+const createManyUsers = async (
+	users: { name: string; email: string; phone: string; password: string }[]
+) => {
 	try {
 		const operations = users.map((user) => ({
 			insertOne: {
@@ -18,28 +20,31 @@ const createManyUsers = async (users: { name: string, email: string, phone: stri
 		await UserSchema.bulkWrite(operations);
 		return createMultipleUsersDto(users as any);
 	} catch (ex: any) {
-		const {err: WriteError} = ex.writeErrors[0];
-		if (ex.code === 11000 && WriteError?.errmsg?.includes('email')) {
+		const { err: WriteError } = ex.writeErrors[0];
+		if (ex.code === 11000 && WriteError?.errmsg?.includes("email")) {
 			throw new CustomError(`El email "${WriteError?.op?.email}" ya se encuentra registrado.`, 400);
 		}
 		throw ex;
 	}
+};
 
-}
-
-const verifyIfEmailAlreadyExists = async ({email, session}:{email:string, session:Session}) => {
-
-        const result = await session.run(
-            `MATCH (u:User)
+const verifyIfEmailAlreadyExists = async ({
+	email,
+	session,
+}: {
+	email: string;
+	session: Session;
+}) => {
+	const result = await session.run(
+		`MATCH (u:User)
             WHERE u.email = $email
             RETURN COUNT(u) AS count`,
-            { email }
-        );
+		{ email }
+	);
 
-        const count = result.records[0].get('count').toNumber();
-        return count > 0;
-
-}
+	const count = result.records[0].get("count").toNumber();
+	return count > 0;
+};
 
 const createUser = async ({
 	name,
@@ -52,23 +57,24 @@ const createUser = async ({
 	email: string;
 	phone: string;
 	password: string;
-	gender: string,
+	gender: string;
 }): Promise<User> => {
 	try {
-		
 		const session = Connection.driver.session();
 
-		if((await verifyIfEmailAlreadyExists({email, session}))) throw new CustomError("El email ya se encuentra registrado.", 400)
+		if (await verifyIfEmailAlreadyExists({ email, session }))
+			throw new CustomError("El email ya se encuentra registrado.", 400);
 
 		const id = generateId();
-		const user = {name, email, phone, password, gender, id}
+		const user = { name, email, phone, password, gender, id };
 		await session.run(
 			`CREATE (u:User:Passenger {name:$name, email:$email, phone:$phone, password:$password,
-			gender:$gender, id:$id}) RETURN u`, user);
+			gender:$gender, id:$id}) RETURN u`,
+			user
+		);
 
 		await session.close();
 		return user;
-
 	} catch (ex: any) {
 		if (ex.code === 11000 && ex.keyValue?.email !== undefined) {
 			throw new CustomError("El email ya se encuentra registrado.", 400);
@@ -84,7 +90,6 @@ const authenticate = async ({
 	email: string;
 	password: string;
 }): Promise<User> => {
-	
 	const session = Connection.driver.session();
 
 	const result = await session.run(
@@ -95,14 +100,13 @@ const authenticate = async ({
 		{ email, password }
 	);
 
-	if(result.records.length === 0) throw new CustomError("Usuario o contraseña incorrectos.", 401);
+	if (result.records.length === 0) throw new CustomError("Usuario o contraseña incorrectos.", 401);
 
-	const {id, name, phone, gender} = result.records[0].get("user").properties;
-	
+	const { id, name, phone, gender } = result.records[0].get("user").properties;
+
 	await session.close();
 
-	return {id, name, phone, gender, email}
-
+	return { id, name, phone, gender, email };
 };
 
 const updateUser = async ({
@@ -139,15 +143,15 @@ const updateUser = async ({
 	}
 };
 
-const updateUserSubdocuments = async (user:User) => {
-	
-	const userObj = {...user, _id: user.id}
-	await RideSchema.updateMany({"user._id": user.id}, {user:userObj})
+const updateUserSubdocuments = async (user: User) => {
+	const userObj = { ...user, _id: user.id };
+	await RideSchema.updateMany({ "user._id": user.id }, { user: userObj });
 	await RideSchema.updateMany(
 		{},
 		{ $set: { "passengers.$[elem]": userObj } },
-  	{ arrayFilters: [{ "elem._id": user.id}] })
-}
+		{ arrayFilters: [{ "elem._id": user.id }] }
+	);
+};
 
 const getUserById = async ({ idUser }: { idUser: string }) => {
 	const session = Connection.driver.session();
@@ -155,7 +159,7 @@ const getUserById = async ({ idUser }: { idUser: string }) => {
 	const result = await session.run(
 		`	MATCH (u:User {id:$idUser})
 			RETURN u as user`,
-		{ idUser}
+		{ idUser }
 	);
 
 	if (result.records.length === 0) return null;
@@ -167,23 +171,69 @@ const getUserById = async ({ idUser }: { idUser: string }) => {
 	return user;
 };
 
-const addFriend = async ({idUser1, idUser2, relation, closeLevel}: {idUser1:string; idUser2:string; relation:string; closeLevel:number})=>{
+const addFriend = async ({
+	idUser1,
+	idUser2,
+	relation,
+	closeLevel,
+}: {
+	idUser1: string;
+	idUser2: string;
+	relation: string;
+	closeLevel: number;
+}) => {
 	const session = Connection.driver.session();
-    const result = await session.run(`
+	const result = await session.run(
+		`
 			MATCH (u1:User {id:$idUser1})
 			MATCH (u2:User {id:$idUser2})
 			MERGE (u1)-[:knows {since:$since, relation:$relation, closeLevel:$closeLevel}]->(u2)
 			RETURN u1
-			`, {
-        idUser1,
-				idUser2,
-				relation,
-				closeLevel,
-				since: new Date().toString(),
-    });
-    if (result.records.length === 0)
-        throw new CustomError("No se pudo asignar al usuario como amigo.", 400);
-    await session.close();
-}
+			`,
+		{
+			idUser1,
+			idUser2,
+			relation,
+			closeLevel,
+			since: new Date().toString(),
+		}
+	);
+	if (result.records.length === 0)
+		throw new CustomError("No se pudo asignar al usuario como amigo.", 400);
+	await session.close();
+};
 
-export { createUser, authenticate, updateUser, getUserById, createManyUsers, updateUserSubdocuments, addFriend };
+const getUsersList = async ({ idUser }: { idUser: string }) => {
+	const session = Connection.driver.session();
+
+	const result = await session.run(
+		`	MATCH (u:User)
+			MATCH (su:User {id:$idUser})
+			RETURN u AS user,
+			EXISTS((su)-[:knows]->(u)) AS is_friend`,
+		{ idUser }
+	);
+
+	if (result.records.length === 0) return null;
+
+	const users: User[] = result.records.map((record) => ({
+		...record.get("user").properties,
+		isFriend: record.get("is_friend"),
+		password: undefined
+	}));
+
+	await session.close();
+
+	return users;
+};
+
+export {
+	createUser,
+	authenticate,
+	updateUser,
+	getUserById,
+	createManyUsers,
+	updateUserSubdocuments,
+	addFriend,
+	getUsersList,
+};

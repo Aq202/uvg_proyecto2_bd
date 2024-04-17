@@ -4,6 +4,7 @@ import {
 	createUserController,
 	getSessionUserController,
 	getUserImageController,
+	getUsersListController,
 	loginController,
 	updateUserController,
 	uploadUsers,
@@ -25,4 +26,5 @@ userRouter.patch("/", ensureAuth, validateBody(updateUserSchema), updateUserCont
 userRouter.get("/", ensureAuth, getSessionUserController);
 userRouter.get("/:idUser/image", getUserImageController);
 userRouter.post("/addFriend", ensureAuth, validateBody(addFriendSchema), addFriendController);
+userRouter.get("/list", ensureAuth, getUsersListController);
 export default userRouter;

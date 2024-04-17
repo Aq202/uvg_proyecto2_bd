@@ -23,12 +23,14 @@
 .title{
     font-size: 24px;
     font-weight: bold;
+    margin:0;
 }
 
 .filtersContainer{
     display: flex;
     flex-direction: row;
     margin-left: auto;
+    margin-bottom: 10px;
 }
 
 .filterContainer{
@@ -77,4 +79,10 @@
         margin-bottom: 20px;
         margin-left: 0;
     }
+}
+
+.timesSection{
+    display: flex;
+    width: 100%;
+    gap: 2%;
 }

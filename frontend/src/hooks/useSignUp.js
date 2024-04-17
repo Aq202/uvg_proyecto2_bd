@@ -14,7 +14,7 @@ function useSignUp() {
   }, [result]);
 
   const signup = async ({
-    name, email, phone, password, photo,
+    name, email, phone, password, photo, gender,
   }) => {
     const uri = `${serverHost}/user`;
     const body = new FormData();
@@ -24,6 +24,7 @@ function useSignUp() {
     body.append('phone', phone);
     body.append('password', password);
     body.append('photo', photo);
+    body.append('gender', gender);
     callFetch({
       uri, method: 'POST', body, removeContentType: true,
     });

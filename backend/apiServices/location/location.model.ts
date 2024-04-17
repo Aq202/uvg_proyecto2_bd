@@ -205,6 +205,64 @@ const getCities = async (country?: string) => {
 	return cities;
 };
 
+const assignHome = async ({idUser, idLocation, isOwner, postalCode, livesAlone}: {idUser:string; idLocation:string; isOwner:boolean; postalCode: number; livesAlone:boolean})=>{
+	const session = Connection.driver.session();
+    const result = await session.run(`
+			MATCH (u:User {id:$idUser})
+			MATCH (l:Location {id:$idLocation})
+			MERGE (u)-[:lives_at {isOwner:$isOwner, postalCode:$postalCode, livesAlone:$livesAlone}]->(l)
+			RETURN u
+			`, {
+        idUser,
+				idLocation,
+				isOwner,
+				postalCode,
+				livesAlone,
+    });
+    if (result.records.length === 0)
+        throw new CustomError("No se pudo asignar la ubicación como casa.", 400);
+    await session.close();
+}
+
+const getHome = async ({idUser}: {idUser: string}) => {
+	const session = Connection.driver.session();
+
+	const result = await session.run(
+		`	MATCH (:User {id: $idUser})-[l_rel:lives_at]->(l:Location)
+			RETURN l as location, l_rel AS user_lives_at_rel
+			LIMIT 1`,
+		{ idUser }
+	);
+
+	if (result.records.length === 0) return null;
+
+	const home = {
+		...result.records[0].get("location").properties,
+		...result.records[0].get("user_lives_at_rel").properties,
+
+	}
+
+	await session.close();
+
+	return home;
+}
+
+const addContinentToCities = async ({country, continent}:{country:string; continent:string;}) => {
+	const session = Connection.driver.session();
+
+	const result = await session.run(
+		`	MATCH (c:City {country:$country})
+			SET c.continent=$continent
+			RETURN c`,
+		{ country, continent}
+	);
+
+	if (result.records.length === 0) throw new CustomError("No se encontraron ciudades con dicho país.", 400)
+
+	await session.close();
+
+}
+
 export {
 	createCity,
 	createLocation,
@@ -214,4 +272,7 @@ export {
 	getLocationById,
 	getCountries,
 	getCities,
+	assignHome,
+	getHome,
+	addContinentToCities,
 };
