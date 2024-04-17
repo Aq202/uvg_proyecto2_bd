@@ -114,9 +114,9 @@ function Places() {
     return true;
   };
 
-  const editPlace = (id, name, address, city, country) => {
+  const editPlace = (id, name, address, openTime, closeTime, parking) => {
     setPlaceToEdit({
-      id, name, address, city, country,
+      idLocation: id, name, address, openTime, closeTime, parking,
     });
   };
 
@@ -157,9 +157,11 @@ function Places() {
     let hasError = false;
 
     if (!validateAddress(placeToEdit.address)) hasError = true;
-    if (!validateCity(placeToEdit.city)) hasError = true;
-    if (!validateCountry(placeToEdit.country)) hasError = true;
     if (!validateName(placeToEdit.name)) hasError = true;
+    if (!validateOpenTime(placeToEdit.openTime)) hasError = true;
+    if (!validateCloseTime(placeToEdit.closeTime)) hasError = true;
+
+    console.log(hasError);
 
     if (hasError) return;
 
@@ -211,7 +213,8 @@ function Places() {
   };
 
   const handleEditFormChange = (e) => {
-    const { name, value } = e.target;
+    const { name } = e.target;
+    const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
     setPlaceToEdit((prev) => ({ ...prev, [name]: value }));
   };
 
@@ -270,10 +273,6 @@ function Places() {
   }, [resultCities]);
 
   useEffect(() => {
-    console.log(placeToCreate);
-  }, [placeToCreate]);
-
-  useEffect(() => {
     if (resultGetUser) setUserdata(resultGetUser);
   }, [resultGetUser]);
 
@@ -310,8 +309,9 @@ function Places() {
                 place.id,
                 place.name,
                 place.address,
-                place.city.name,
-                place.city.country,
+                place.openTime,
+                place.closeTime,
+                place.parking,
               )}
               deletePlace={() => deletePlace(place.id)}
             />
@@ -344,26 +344,29 @@ function Places() {
               onBlur={() => validateAddress(placeToEdit.address)}
               onFocus={clearError}
             />
-            <InputSelect
-              title="País"
-              className={styles.inputSelect}
-              options={countries.map((country) => (
-                { value: country.name, title: country.name }))}
-              name="country"
-              value={placeToEdit.country}
+            <InputText
+              title="Hora apertura"
+              name="openTime"
+              value={placeToEdit.openTime}
               onChange={handleEditFormChange}
-              error={errors.country}
-              onBlur={() => validateCountry(placeToEdit.country)}
+              error={errors.openTime}
+              onBlur={() => validateOpenTime(placeToEdit.openTime)}
               onFocus={clearError}
             />
             <InputText
-              title="Ciudad"
-              name="city"
-              value={placeToEdit.city}
+              title="Hora cierre"
+              name="closeTime"
+              value={placeToEdit.closeTime}
               onChange={handleEditFormChange}
-              error={errors.city}
-              onBlur={() => validateCity(placeToEdit.city)}
+              error={errors.closeTime}
+              onBlur={() => validateCloseTime(placeToEdit.openTime)}
               onFocus={clearError}
+            />
+            <InputCheck
+              title="El lugar cuenta con parqueo"
+              name="parking"
+              value={placeToCreate.parking}
+              onChange={handleEditFormChange}
             />
             <Button text="Actualizar" className={styles.updateButton} onClick={updateLocation} disabled={loadingPut} />
           </div>
