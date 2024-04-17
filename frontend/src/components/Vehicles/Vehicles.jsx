@@ -2,17 +2,16 @@
 import React, { useEffect, useState } from 'react';
 import { HexColorPicker } from 'react-colorful';
 import { FaAngleLeft, FaAngleRight } from 'react-icons/fa';
-import DatePicker from 'react-datepicker';
 import styles from './Vehicles.module.css';
 import useFetch from '../../hooks/useFetch';
 import useToken from '../../hooks/useToken';
-import 'react-datepicker/dist/react-datepicker.css';
 import {
   button, blue, green, red,
 } from '../../styles/buttons.module.css';
 import { serverHost } from '../../config';
 import Spinner from '../Spinner/Spinner';
 import InputText from '../InputText';
+import InputDate from '../InputDate';
 
 function Vehicles() {
   const token = useToken();
@@ -24,7 +23,7 @@ function Vehicles() {
     color: '#fff',
     type: 'Sedan',
     stillOwner: true,
-    since: new Date(),
+    since: '',
     price: 0,
   });
   const [addingVehicle, setAddingVehicle] = useState(false);
@@ -32,6 +31,7 @@ function Vehicles() {
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [errors, setErrors] = useState({});
   const vehicleTypes = ['SUV', 'Sedan', 'Pickup', 'Scooter', 'Motorbike', 'Jeep', 'Hatchback'];
+  let generalError;
 
   const {
     callFetch: getVehicles, result: resultGetVehicles, loading, error,
@@ -76,30 +76,31 @@ function Vehicles() {
   };
 
   const saveVehicle = () => {
-    try {
-      console.log('body:', JSON.stringify(newVehicle));
-      addVehicle({
-        uri: `${serverHost}/vehicle`,
-        headers: { authorization: token },
-        body: JSON.stringify(newVehicle),
-        method: 'POST',
-        parse: false,
-      });
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setAddingVehicle(false);
-      setNewVehicle({
-        identification: '',
-        brand: '',
-        model: '',
-        year: '',
-        color: '#fff',
-        type: 'Sedan',
-        stillOwner: true,
-        since: new Date(),
-        price: 0,
-      });
+    if (errors.length > 0) {
+      generalError = 'Debe corregir los errores primero.';
+    } else {
+      try {
+        addVehicle({
+          uri: `${serverHost}/vehicle`,
+          headers: { authorization: token },
+          body: JSON.stringify(newVehicle),
+          method: 'POST',
+          parse: false,
+        });
+      } finally {
+        setAddingVehicle(false);
+        setNewVehicle({
+          identification: '',
+          brand: '',
+          model: '',
+          year: '',
+          color: '#fff',
+          type: 'Sedan',
+          stillOwner: true,
+          since: new Date(),
+          price: 0,
+        });
+      }
     }
   };
 
@@ -123,8 +124,6 @@ function Vehicles() {
     setNewVehicle((prev) => ({ ...prev, color }));
   };
 
-  useEffect(() => { console.log(newVehicle); }, [newVehicle]);
-
   const validateVehiclePrice = () => {
     const reg = /^[0-9]+$/;
     if (!reg.test(newVehicle.price)) {
@@ -139,6 +138,9 @@ function Vehicles() {
   const validateVehicleYear = () => {
     if (newVehicle.year > new Date().getFullYear()) {
       setErrors((lastVal) => ({ ...lastVal, year: 'El año debe ser menor o igual al actual.' }));
+    }
+    if (newVehicle.year.length === 0) {
+      setErrors((lastVal) => ({ ...lastVal, year: 'Debe ingresar el año del vehículo.' }));
     }
   };
 
@@ -158,6 +160,17 @@ function Vehicles() {
     const reg = /^(P|M|O|C)[0-9][0-9][0-9][A-Z][A-Z][A-Z]$/;
     if (!reg.test(newVehicle.identification) || newVehicle.identification.length === 0) {
       setErrors((lastVal) => ({ ...lastVal, identification: 'La placa no es válida' }));
+    }
+  };
+
+  const validateVehicleSince = () => {
+    const fecha = new Date(newVehicle.since);
+    console.log(fecha > new Date());
+    console.log(fecha);
+    console.log(new Date());
+    console.log(newVehicle.since);
+    if (newVehicle.since.length === 0 || fecha > new Date()) {
+      setErrors((lastVal) => ({ ...lastVal, since: 'La fecha no es válida' }));
     }
   };
 
@@ -240,7 +253,7 @@ function Vehicles() {
                           </div>
                         </button>
                       </td>
-                      <td>
+                      <td className={styles.inputCell}>
                         <InputText
                           title="Placa"
                           name="identification"
@@ -252,7 +265,7 @@ function Vehicles() {
                           className={styles.inputText}
                         />
                       </td>
-                      <td>
+                      <td className={styles.inputCell}>
                         <InputText
                           title="Marca"
                           name="brand"
@@ -264,7 +277,7 @@ function Vehicles() {
                           className={styles.inputText}
                         />
                       </td>
-                      <td>
+                      <td className={styles.inputCell}>
                         <InputText
                           title="Modelo"
                           name="model"
@@ -276,7 +289,7 @@ function Vehicles() {
                           className={styles.inputText}
                         />
                       </td>
-                      <td>
+                      <td className={styles.inputCell}>
                         <InputText
                           title="Año"
                           name="year"
@@ -288,13 +301,18 @@ function Vehicles() {
                           className={styles.inputText}
                         />
                       </td>
-                      <td>
-                        <DatePicker
-                          selected={newVehicle.since}
-                          onChange={(date) => setNewVehicle({ ...newVehicle, since: date })}
+                      <td className={styles.inputCell}>
+                        <InputDate
+                          title="Desde"
+                          name="since"
+                          onChange={handleChange}
+                          error={errors.since}
+                          onBlur={validateVehicleSince}
+                          onFocus={clearError}
+                          className={styles.inputText}
                         />
                       </td>
-                      <td>
+                      <td className={styles.inputCell}>
                         <InputText
                           title="Precio"
                           name="price"
@@ -355,7 +373,7 @@ function Vehicles() {
                 Nuevo vehículo
               </button>
             )}
-          {errorAdd && <div className={styles.errorMessage}>{error?.message ?? 'Ocurrió un error.'}</div>}
+          {(errorAdd || generalError) && <div className={styles.errorMessage}>{generalError ?? error?.message ?? 'Ocurrió un error.'}</div>}
           {addingVehicle
             && (
               <div className={styles.buttonsContainer}>

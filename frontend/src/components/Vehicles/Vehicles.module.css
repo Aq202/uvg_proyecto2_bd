@@ -125,7 +125,6 @@
     width: fit-content;
     text-align: center;
     padding-bottom: 15px;
-    vertical-align: top;
 }
 
 .inputText {
@@ -134,10 +133,18 @@
     font-size: 15px;
 }
 
-.inputText span{
+.datePicker{
+    font-family: 'Montserrat';
+    padding-top:3px !important;
+    font-size: 15px;
+    padding-bottom:3px !important;
+}
+
+.inputText span {
     font-size: 12px !important;
 }
-.inputText label{
+
+.inputText label {
     height: fit-content !important;
 }
 
@@ -230,6 +237,10 @@
 
 .rightArrow {
     right: -15px;
+}
+
+.inputCell {
+    vertical-align: top;
 }
 
 @media (max-aspect-ratio: 1/1) {
