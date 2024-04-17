@@ -394,15 +394,17 @@ function Trip({
                 <p className={styles.requestTitle}>Mensaje</p>
               </div>
             )}
-            {requests?.map((request) => (
-              <div className={styles.requestContainer}>
-                <p className={styles.requestName}>{request.user.name}</p>
-                <p className={styles.requestMessage}>{request.message}</p>
-                <div className={styles.requestButtonsContainer}>
-                  <Button className={styles.requestButton} text="Aceptar" onClick={() => assignPassenger(id, request.user.id)} disabled={loadingAccept} />
+            {requests
+              ?.filter((value, index, self) => self.indexOf(value) === index)
+              .map((request) => (
+                <div className={styles.requestContainer}>
+                  <p className={styles.requestName}>{request.user.name}</p>
+                  <p className={styles.requestMessage}>{request.message}</p>
+                  <div className={styles.requestButtonsContainer}>
+                    <Button className={styles.requestButton} text="Aceptar" onClick={() => assignPassenger(id, request.user.id)} disabled={loadingAccept} />
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
             {!requests && (
               <p>No tienes solicitudes pendientes</p>
             )}
