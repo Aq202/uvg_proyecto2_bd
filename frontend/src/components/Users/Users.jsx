@@ -24,13 +24,11 @@ function Users() {
     callFetch: fetchaddFriend,
     result: resultAdd,
     error: errorAdd,
-    loading: loadingAdd,
   } = useFetch();
   const {
     callFetch: fetchRemoveFriend,
     result: resultRemove,
     error: errorRemove,
-    loading: loadingRemove,
   } = useFetch();
 
   const token = useToken();
@@ -85,7 +83,7 @@ function Users() {
       </div>
       {errorAdd && <div className={styles.errorMessage}>{errorAdd?.message ?? 'Ocurrió un error.'}</div>}
       {errorRemove && <div className={styles.errorMessage}>{errorRemove?.message ?? 'Ocurrió un error.'}</div>}
-      {!errorGet && !loadingGet && !loadingAdd && !loadingRemove && (
+      {!errorGet && !loadingGet && (
         <div className={styles.subContainer}>
           <table className={styles.table}>
             {users?.map((user) => {
