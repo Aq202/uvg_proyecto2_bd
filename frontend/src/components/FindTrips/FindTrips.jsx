@@ -10,10 +10,8 @@ import { serverHost } from '../../config';
 import Spinner from '../Spinner';
 import Button from '../Button';
 import countries from '../../assets/countries.ts';
-import useSessionData from '../../hooks/useSessionData';
 
 function FindTrips() {
-  const userData = useSessionData();
   const [filters, setFilters] = useState({ role: 'none', order: -1 });
   const [currentPage, setCurrentPage] = useState(0);
   const {
@@ -193,8 +191,7 @@ function FindTrips() {
               arrivalTime={typeof (trip.date) === 'string' ? `${trip.date}, ${trip.arrival}` : readDate(trip.arrival)}
               realStartTime={trip.startLocation.realStartTime ? readDate(trip.startLocation.realStartTime) : ''}
               realArrivalTime={trip.arrivalLocation.realArrivalTime ? readDate(trip.arrivalLocation.realArrivalTime) : ''}
-              joined={trip?.isPassenger
-                || trip?.passengers?.some((passenger) => passenger.user.id === userData.id)}
+              joined={trip.isPassenger}
               callback={refreshTrips}
               owner={trip.isDriver}
               driver={trip.driver?.name}
