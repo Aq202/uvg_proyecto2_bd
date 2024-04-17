@@ -3,6 +3,7 @@ import ensureAuth from "../../middlewares/ensureAuth.js";
 import validateBody from "../../middlewares/validateBody.js";
 import createLocationSchema from "./validationSchemas/createLocationSchema.js";
 import {
+	addContinentToCitiesController,
 	assignHomeController,
 	createCityController,
 	createLocationController,
@@ -26,5 +27,6 @@ locationRouter.get("/", ensureAuth, getLocationsController);
 locationRouter.get("/countries", ensureAuth, getCountriesListController);
 locationRouter.get("/cities", ensureAuth, getCitiesListController);
 locationRouter.post("/home", ensureAuth, validateBody(assignHomeSchema), assignHomeController);
+locationRouter.patch("/continent", ensureAuth, addContinentToCitiesController);
 
 export default locationRouter;

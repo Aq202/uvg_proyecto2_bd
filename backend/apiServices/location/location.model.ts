@@ -247,6 +247,22 @@ const getHome = async ({idUser}: {idUser: string}) => {
 	return home;
 }
 
+const addContinentToCities = async ({country, continent}:{country:string; continent:string;}) => {
+	const session = Connection.driver.session();
+
+	const result = await session.run(
+		`	MATCH (c:City {country:$country})
+			SET c.continent=$continent
+			RETURN c`,
+		{ country, continent}
+	);
+
+	if (result.records.length === 0) throw new CustomError("No se encontraron ciudades con dicho país.", 400)
+
+	await session.close();
+
+}
+
 export {
 	createCity,
 	createLocation,
@@ -258,4 +274,5 @@ export {
 	getCities,
 	assignHome,
 	getHome,
+	addContinentToCities,
 };

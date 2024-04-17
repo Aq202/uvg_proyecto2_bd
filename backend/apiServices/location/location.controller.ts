@@ -2,6 +2,7 @@ import CustomError from "../../utils/customError.js";
 import errorSender from "../../utils/errorSender.js";
 import exists from "../../utils/exists.js";
 import {
+	addContinentToCities,
 	assignHome,
 	createCity,
 	createLocation,
@@ -178,6 +179,26 @@ const assignHomeController = async (req: AppRequest, res: AppResponse) => {
 	}
 };
 
+const addContinentToCitiesController = async (req: AppRequest, res: AppResponse) => {
+	try {
+		const { country, continent } = req.body;
+
+
+		if (!country) throw new CustomError("El campo 'country' es obligatorio. ", 400);
+		if (!continent) throw new CustomError("El campo 'continent' es obligatorio. ", 400);
+
+		await addContinentToCities({country, continent})
+
+		res.send({ ok: true });
+	} catch (ex) {
+		await errorSender({
+			res,
+			ex,
+			defaultError: "Ocurrio un error al asignar continente a ciudades de un país.",
+		});
+	}
+};
+
 export {
 	createCityController,
 	createLocationController,
@@ -187,4 +208,5 @@ export {
 	getCountriesListController,
 	getCitiesListController,
 	assignHomeController,
+	addContinentToCitiesController
 };
