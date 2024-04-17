@@ -179,7 +179,7 @@ function Vehicles() {
       {(error || vehiclesData === undefined) && <div className={styles.errorMessage}>{error?.message ?? 'Ocurrió un error.'}</div>}
       {!loading && !error && vehiclesData !== undefined && (
         <div className={styles.vehiclesContainer}>
-          <table>
+          <table style={{ width: addingVehicle ? '80%' : '60%' }}>
             <tbody>
               {vehiclesData.map((vehicle, index) => {
                 let currentVehicleType = vehicleTypes.indexOf(newVehicle.type);

@@ -39,6 +39,9 @@ function NavBar({ handleNavBar }) {
             <p>Lugares</p>
           </div>
 
+          <div className={styles.section} onClick={() => handleNavBar('users')}>
+            <p>Usuarios</p>
+          </div>
           <div className={styles.section} onClick={() => handleNavBar('profile')}>
             <p>Perfil</p>
           </div>
