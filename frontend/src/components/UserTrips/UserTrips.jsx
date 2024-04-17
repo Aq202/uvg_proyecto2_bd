@@ -7,6 +7,9 @@ import Trip from '../Trip';
 import useFetch from '../../hooks/useFetch';
 import useToken from '../../hooks/useToken';
 import { serverHost } from '../../config';
+import {
+  button, red,
+} from '../../styles/buttons.module.css';
 import Button from '../Button';
 import InputDate from '../InputDate';
 import PopUp from '../PopUp/PopUp';
@@ -45,6 +48,8 @@ function UserTrips() {
   } = useFetch();
   const { callFetch: postRide, result: resultPost, loading: loadingTrip } = useFetch();
   const { callFetch: fetchCities, result: resultCities } = useFetch();
+  const { callFetch: deleteUserTrip, result: resultDelete } = useFetch();
+  const { callFetch: deleteAllUserTrips, result: resultDeleteAll } = useFetch();
   const [errors, setErrors] = useState({});
 
   const token = useToken();
@@ -251,10 +256,10 @@ function UserTrips() {
   }, [resultGet]);
 
   useEffect(() => {
-    if (!resultPost) return;
-    refreshTrips();
+    if (!resultDelete && !resultPost && !resultDeleteAll) return;
     closeCreate();
-  }, [resultPost]);
+    refreshTrips();
+  }, [resultDelete, resultPost, resultDeleteAll]);
 
   useEffect(() => {
     if (filters.role === '') return;
@@ -279,6 +284,24 @@ function UserTrips() {
     if (filters.country !== undefined && filters.country !== '') getCities(filters.country);
   }, [filters.country]);
 
+  const deleteTrip = (tripId) => {
+    deleteUserTrip({
+      uri: `${serverHost}/ride/${tripId}`,
+      headers: { authorization: token },
+      method: 'DELETE',
+      parse: false,
+    });
+  };
+
+  const deleteAllTrips = () => {
+    deleteAllUserTrips({
+      uri: `${serverHost}/ride`,
+      headers: { authorization: token },
+      method: 'DELETE',
+      parse: false,
+    });
+  };
+
   return (
     <div className={styles.mainContainer}>
 
@@ -287,6 +310,14 @@ function UserTrips() {
         <p className={styles.title}>Mis Viajes</p>
 
         <Button text="Nuevo" className={styles.newButton} onClick={openCreate} />
+        <button
+          style={{ marginLeft: '10px' }}
+          className={`${button} ${red}`}
+          onClick={deleteAllTrips}
+          type="button"
+        >
+          Eliminar todos
+        </button>
 
         <div className={styles.filtersContainer}>
 
@@ -327,17 +358,17 @@ function UserTrips() {
         </div>
 
         {resultCities && (
-        <div className={styles.filterContainer}>
-          <InputSelect
-            options={filters.country !== undefined && filters.countries !== '' && resultCities
-              ? resultCities.map((city) => ({ value: city.name, title: city.name }))
-              : []}
-            name="city"
-            onChange={handleFilterChange}
-            placeholder="Ciudad"
-            value={filters?.city}
-          />
-        </div>
+          <div className={styles.filterContainer}>
+            <InputSelect
+              options={filters.country !== undefined && filters.countries !== '' && resultCities
+                ? resultCities.map((city) => ({ value: city.name, title: city.name }))
+                : []}
+              name="city"
+              onChange={handleFilterChange}
+              placeholder="Ciudad"
+              value={filters?.city}
+            />
+          </div>
         )}
       </div>
 
@@ -363,6 +394,7 @@ function UserTrips() {
               completed={trip.completed}
               requests={trip.requests ? trip.requests : null}
               started={trip.driver.onMyWay}
+              deleteTrip={() => deleteTrip(trip.id)}
             />
           ))}
         </div>
@@ -380,113 +412,113 @@ function UserTrips() {
       />
 
       {isCreateOpen && (
-      <PopUp close={closeCreate} closeWithBackground>
-        <div className={styles.createTrip}>
-          {resultGetLocationsCreate && resultGetVehicles && (
-            <>
-              <h2 className={styles.creteTripTitle}>Crear viaje</h2>
-              <p className={styles.createDescription}>Crea un viaje del que serás el conductor</p>
-              <InputSelect
-                className={styles.inputSelect}
-                title="Lugar de salida"
-                options={resultGetLocationsCreate.map((location) => (
-                  { value: location.id, title: location.name }))}
-                name="idStartLocation"
-                value={rideToCreate.idStartLocation}
-                onChange={handleFormChange}
-                error={errors.idStartLocation}
-                onBlur={validateStartLocation}
-                onFocus={clearError}
-              />
-              <InputSelect
-                className={styles.inputSelect}
-                title="Lugar de llegada"
-                options={resultGetLocationsCreate.map((location) => (
-                  { value: location.id, title: location.name }))}
-                name="idArrivalLocation"
-                value={rideToCreate.idArrivalLocation}
-                onChange={handleFormChange}
-                error={errors.idArrivalLocation}
-                onBlur={validateArrivalLocation}
-                onFocus={clearError}
-              />
-              <InputDate
-                title="Fecha de salida"
-                name="date"
-                onChange={handleFormChange}
-                error={errors.date}
-                onBlur={validateDate}
-                onFocus={clearError}
-              />
-              <div className={styles.timesSection}>
-                <InputTime
-                  title="Hora de salida"
-                  name="start"
-                  value={rideToCreate.start}
+        <PopUp close={closeCreate} closeWithBackground>
+          <div className={styles.createTrip}>
+            {resultGetLocationsCreate && resultGetVehicles && (
+              <>
+                <h2 className={styles.creteTripTitle}>Crear viaje</h2>
+                <p className={styles.createDescription}>Crea un viaje del que serás el conductor</p>
+                <InputSelect
+                  className={styles.inputSelect}
+                  title="Lugar de salida"
+                  options={resultGetLocationsCreate.map((location) => (
+                    { value: location.id, title: location.name }))}
+                  name="idStartLocation"
+                  value={rideToCreate.idStartLocation}
                   onChange={handleFormChange}
-                  error={errors.start}
-                  onBlur={() => validateStart(rideToCreate.start)}
+                  error={errors.idStartLocation}
+                  onBlur={validateStartLocation}
                   onFocus={clearError}
                 />
-                <InputTime
-                  title="Hora de llegada"
-                  name="arrival"
-                  value={rideToCreate.arrival}
+                <InputSelect
+                  className={styles.inputSelect}
+                  title="Lugar de llegada"
+                  options={resultGetLocationsCreate.map((location) => (
+                    { value: location.id, title: location.name }))}
+                  name="idArrivalLocation"
+                  value={rideToCreate.idArrivalLocation}
                   onChange={handleFormChange}
-                  error={errors.arrival}
-                  onBlur={() => validateArrival(rideToCreate.arrival)}
+                  error={errors.idArrivalLocation}
+                  onBlur={validateArrivalLocation}
                   onFocus={clearError}
                 />
-              </div>
-              <InputSelect
-                className={styles.inputSelect}
-                title="Vehículo de salida"
-                options={resultGetVehicles.map((vehicle) => (
-                  { value: vehicle.identification, title: `${vehicle.brand} ${vehicle.model} ${vehicle.year}` }))}
-                name="vehicleId"
-                value={rideToCreate.vehicleId}
-                onChange={handleFormChange}
-                error={errors.vehicleId}
-                onBlur={validateVehicleId}
-                onFocus={clearError}
-              />
-              <InputCheck
-                title="Los pasajeros pueden llevar equipaje"
-                name="allowsLuggage"
-                value={rideToCreate.allowsLuggage}
-                onChange={handleFormChange}
-              />
-              <InputCheck
-                title="Está permitido reproducir música en el viaje"
-                name="allowsMusic"
-                value={rideToCreate.allowsMusic}
-                onChange={handleFormChange}
-              />
-              <InputNumber
-                title="Capacidad de pasajeros"
-                name="remainingSpaces"
-                value={rideToCreate.remainingSpaces}
-                onChange={handleFormChange}
-                error={errors.remainingSpaces}
-                onBlur={() => validateCapacity(rideToCreate.remainingSpaces)}
-                onFocus={clearError}
-              />
-              <Button text="Crear" className={styles.createButton} onClick={postTrip} disabled={loadingTrip} />
-            </>
-          )}
-          {errorGetLocationsCreate && (
-          <p className={styles.createDescription}>
-            Aún no has registrado ninguna ubicación para tus viajes
-          </p>
-          )}
-          {errorGetVehicles && (
-          <p className={styles.createDescription}>
-            Aún no has registrado ningún vehículo para tus viajes
-          </p>
-          )}
-          {(loadingGetLocationsCreate || loadingGetVehicles) && <Spinner />}
-        </div>
-      </PopUp>
+                <InputDate
+                  title="Fecha de salida"
+                  name="date"
+                  onChange={handleFormChange}
+                  error={errors.date}
+                  onBlur={validateDate}
+                  onFocus={clearError}
+                />
+                <div className={styles.timesSection}>
+                  <InputTime
+                    title="Hora de salida"
+                    name="start"
+                    value={rideToCreate.start}
+                    onChange={handleFormChange}
+                    error={errors.start}
+                    onBlur={() => validateStart(rideToCreate.start)}
+                    onFocus={clearError}
+                  />
+                  <InputTime
+                    title="Hora de llegada"
+                    name="arrival"
+                    value={rideToCreate.arrival}
+                    onChange={handleFormChange}
+                    error={errors.arrival}
+                    onBlur={() => validateArrival(rideToCreate.arrival)}
+                    onFocus={clearError}
+                  />
+                </div>
+                <InputSelect
+                  className={styles.inputSelect}
+                  title="Vehículo de salida"
+                  options={resultGetVehicles.map((vehicle) => (
+                    { value: vehicle.identification, title: `${vehicle.brand} ${vehicle.model} ${vehicle.year}` }))}
+                  name="vehicleId"
+                  value={rideToCreate.vehicleId}
+                  onChange={handleFormChange}
+                  error={errors.vehicleId}
+                  onBlur={validateVehicleId}
+                  onFocus={clearError}
+                />
+                <InputCheck
+                  title="Los pasajeros pueden llevar equipaje"
+                  name="allowsLuggage"
+                  value={rideToCreate.allowsLuggage}
+                  onChange={handleFormChange}
+                />
+                <InputCheck
+                  title="Está permitido reproducir música en el viaje"
+                  name="allowsMusic"
+                  value={rideToCreate.allowsMusic}
+                  onChange={handleFormChange}
+                />
+                <InputNumber
+                  title="Capacidad de pasajeros"
+                  name="remainingSpaces"
+                  value={rideToCreate.remainingSpaces}
+                  onChange={handleFormChange}
+                  error={errors.remainingSpaces}
+                  onBlur={() => validateCapacity(rideToCreate.remainingSpaces)}
+                  onFocus={clearError}
+                />
+                <Button text="Crear" className={styles.createButton} onClick={postTrip} disabled={loadingTrip} />
+              </>
+            )}
+            {errorGetLocationsCreate && (
+              <p className={styles.createDescription}>
+                Aún no has registrado ninguna ubicación para tus viajes
+              </p>
+            )}
+            {errorGetVehicles && (
+              <p className={styles.createDescription}>
+                Aún no has registrado ningún vehículo para tus viajes
+              </p>
+            )}
+            {(loadingGetLocationsCreate || loadingGetVehicles) && <Spinner />}
+          </div>
+        </PopUp>
       )}
 
     </div>

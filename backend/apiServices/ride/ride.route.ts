@@ -1,6 +1,7 @@
 import express from "express";
 import ensureAuth from "../../middlewares/ensureAuth.js";
 import {
+	acceptAllUserRequestsController,
 	addPassengerCommentController,
 	assignUserToRideController,
 	completePassengerParticipationController,
@@ -12,6 +13,7 @@ import {
 	getRideController,
 	getRidesController,
 	getTopUsersWithMostCompletedRidesController,
+	removeAllPassengersFromRideController,
 	removeUserFromRideController,
 	startRideController,
 } from "./ride.controller.js";
@@ -29,9 +31,11 @@ rideRouter.post("/", ensureAuth, validateBody(createRideSchema), createRideContr
 rideRouter.get("/", ensureAuth, getRidesController);
 rideRouter.get("/:idRide", ensureAuth, getRideController);
 rideRouter.post("/:idRide/assign/:idUser", ensureAuth, assignUserToRideController);
+rideRouter.post("/:idRide/assignAll", ensureAuth, acceptAllUserRequestsController);
 rideRouter.delete("/", ensureAuth, deleteAllUserRidesController);
 rideRouter.delete("/:idRide", ensureAuth, deleteRideController);
-rideRouter.delete("/:idRide/assignment", ensureAuth, removeUserFromRideController);
+rideRouter.delete("/:idRide/assignment/:idUser", ensureAuth, removeUserFromRideController);
+rideRouter.delete("/:idRide/allAssignments", ensureAuth, removeAllPassengersFromRideController);
 rideRouter.get("/user/top", ensureAuth, getTopUsersWithMostCompletedRidesController);
 rideRouter.post("/request", ensureAuth, validateBody(createRideRequestSchema), createRideRequestController);
 rideRouter.post("/comment", ensureAuth, validateBody(commentRideSchema), addPassengerCommentController);

@@ -192,21 +192,57 @@ const assignUserToRide = async ({
 	idRide,
 	sessionIdUser,
 }: {
-	idUser: string;
+	idUser?: string;
 	idRide: string;
 	sessionIdUser: string;
 }) => {
 	const session = Connection.driver.session();
 
 	const result = await session.run(
-		`	MATCH (u:User {id:$idUser})
+		`	MATCH (u:User ${idUser ? "{id:$idUser}": ""})
 			MATCH (r:Ride {id:$idRide})
 			MATCH (:Driver {id:$sessionIdUser})-[:drives]->(r)
 			MATCH (u)-[a:asks]->(r)
 			WHERE NOT EXISTS((u)-[:drives]->(r))
 			MERGE (u)-[p:is_passenger]->(r)
 			SET a.approved = true
+			SET a.approved_date = $date
 			RETURN p
+			`,
+		{
+			idUser,
+			idRide,
+			sessionIdUser,
+			date: new Date().toString()
+		}
+	);
+
+	if (result.records.length === 0)
+		throw new CustomError("No se pudo asignar al usuario como pasajero.", 400);
+
+	await session.close();
+};
+const removeUserFromRide = async ({
+	idUser,
+	idRide,
+	sessionIdUser,
+}: {
+	idUser?: string;
+	idRide: string;
+	sessionIdUser: string;
+}) => {
+	const session = Connection.driver.session();
+
+	const result = await session.run(
+		`	MATCH (u:User ${idUser ? "{id:$idUser}": ""})
+			MATCH (r:Ride {id:$idRide})
+			MATCH (:Driver {id:$sessionIdUser})-[:drives]->(r)
+			MATCH (u)-[a:asks]->(r)
+			MATCH (u)-[p:is_passenger]->(r)
+			SET a.approved = false
+			REMOVE a.approved_date
+			DELETE p
+			RETURN u
 			`,
 		{
 			idUser,
@@ -216,7 +252,7 @@ const assignUserToRide = async ({
 	);
 
 	if (result.records.length === 0)
-		throw new CustomError("No se pudo asignar al usuario como pasajero.", 400);
+		throw new CustomError("No se pudo retirar al usuario como pasajero.", 400);
 
 	await session.close();
 };
@@ -247,20 +283,6 @@ const deleteRide = async ({
 	await session.close();
 };
 
-const removeUserFromRide = async ({ idUser, idRide }: { idUser: string; idRide: string }) => {
-	try {
-		const { acknowledged, matchedCount } = await RideSchema.updateOne(
-			{ _id: idRide },
-			{ passengers: { $pull: { _id: idUser } }, $inc: { num_passengers: -1 } }
-		);
-
-		if (matchedCount === 0) throw new CustomError("No se encontraron coincidencias.", 404);
-		if (!acknowledged) throw new CustomError("No se pudo remover al usuario del ride.", 500);
-	} catch (ex: any) {
-		if (ex?.kind === "ObjectId") throw new CustomError("El id no es válido.", 400);
-		throw ex;
-	}
-};
 
 const createRideRequest = async ({
 	idUser,
