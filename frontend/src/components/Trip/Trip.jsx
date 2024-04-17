@@ -247,12 +247,12 @@ function Trip({
         )}
       </div>
 
-      {!owner && !joined && <Button className={styles.button} text="Solicitar unirse" onClick={openJoin} disabled={loadingPost} />}
+      {!owner && !joined && !completed && <Button className={styles.button} text="Solicitar unirse" onClick={openJoin} disabled={loadingPost} />}
       {!owner && joined && <Button className={styles.button} text="Enviar comentarios" onClick={openComment} disabled={loadingPost} />}
       {owner && (
         <div className={styles.actionsContainer}>
           <DeleteIcon className={styles.deleteIcon} onClick={deleteTrip} />
-          <Button className={styles.button} text="Solicitudes de pasajeros" onClick={openRequests} disabled={loadingPost} />
+          <Button text="Solicitudes de pasajeros" onClick={openRequests} disabled={loadingPost} />
         </div>
       )}
       {!owner && completed && <Button className={styles.button} text="Calificar viaje" onClick={openRating} disabled={loadingPost} />}

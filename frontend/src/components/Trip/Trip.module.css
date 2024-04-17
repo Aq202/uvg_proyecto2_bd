@@ -113,3 +113,13 @@
     gap: 10px;
     margin-top: 10px;
 }
+
+.button {
+    width: fit-content;
+    margin: 10px 10px 0 auto;
+}
+
+.acceptAll{
+    white-space: nowrap;
+    margin-left: -53px;
+}
