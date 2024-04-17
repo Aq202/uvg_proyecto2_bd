@@ -274,6 +274,22 @@ const addContinentToCities = async ({country, continent}:{country:string; contin
 
 }
 
+const updateCountryName = async ({country, newName}:{country:string; newName: string}) => {
+	const session = Connection.driver.session();
+
+	const result = await session.run(
+		`	MATCH (c:City {country:$country})
+			SET c.country = $newName
+			RETURN c`,
+		{ country, newName}
+	);
+
+	if (result.records.length === 0) throw new CustomError("No se encontraron ciudades con dicho país.", 400)
+
+	await session.close();
+
+}
+
 export {
 	createCity,
 	createLocation,
@@ -286,4 +302,5 @@ export {
 	assignHome,
 	getHome,
 	addContinentToCities,
+	updateCountryName,
 };

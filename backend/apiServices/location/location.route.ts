@@ -11,6 +11,7 @@ import {
 	getCitiesListController,
 	getCountriesListController,
 	getLocationsController,
+	updateCountryNameController,
 	updateLocationController,
 } from "./location.controller.js";
 import updateLocationSchema from "./validationSchemas/updateLocationSchema.js";
@@ -28,5 +29,6 @@ locationRouter.get("/countries", ensureAuth, getCountriesListController);
 locationRouter.get("/cities", ensureAuth, getCitiesListController);
 locationRouter.post("/home", ensureAuth, validateBody(assignHomeSchema), assignHomeController);
 locationRouter.patch("/continent", ensureAuth, addContinentToCitiesController);
+locationRouter.patch("/countryName", ensureAuth, updateCountryNameController);
 
 export default locationRouter;

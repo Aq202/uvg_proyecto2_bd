@@ -11,6 +11,7 @@ import {
 	getCountries,
 	getLocationById,
 	getLocations,
+	updateCountryName,
 	updateLocation,
 } from "./location.model.js";
 
@@ -200,6 +201,24 @@ const addContinentToCitiesController = async (req: AppRequest, res: AppResponse)
 		});
 	}
 };
+const updateCountryNameController = async (req: AppRequest, res: AppResponse) => {
+	try {
+		const { country, newName } = req.body;
+
+		if (!country) throw new CustomError("El campo 'country' es obligatorio. ", 400);
+		if (!newName) throw new CustomError("El campo 'newName' es obligatorio. ", 400);
+
+		await updateCountryName({ country, newName });
+
+		res.send({ ok: true });
+	} catch (ex) {
+		await errorSender({
+			res,
+			ex,
+			defaultError: "Ocurrio un error al actualizar nombre de país.",
+		});
+	}
+};
 
 export {
 	createCityController,
@@ -211,4 +230,5 @@ export {
 	getCitiesListController,
 	assignHomeController,
 	addContinentToCitiesController,
+	updateCountryNameController,
 };
