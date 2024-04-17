@@ -9,6 +9,7 @@ import { serverHost } from '../../config';
 import PopUp from '../PopUp/PopUp';
 import usePopUp from '../../hooks/usePopUp';
 import InputText from '../InputText';
+import InputNumber from '../InputNumber/InputNumber';
 
 function Trip({
   id,
@@ -27,13 +28,20 @@ function Trip({
   joined,
   callback,
   owner,
+  completed, // Pendiente: Verificar si ya se inició el viaje
+  requests,
 }) {
   const { callFetch: joinRide, result: resultPost, loading: loadingPost } = useFetch();
+  const { callFetch: acceptRequest, result: resultAccept, loading: loadingAccept } = useFetch();
+  const { callFetch: submitRating, result: resultRating, loading: loadingRating } = useFetch();
   // const { callFetch: leaveRide, result: resultDelete, loading: loadingDelete } = useFetch();
   const [errors, setErrors] = useState({});
   const [joinMessage, setJoinMessage] = useState('Hola, ¿me podrías llevar?');
+  const [rating, setRating] = useState(5);
   const token = useToken();
   const [isJoinOpen, openJoin, closeJoin] = usePopUp();
+  const [isRequestsOpen, openRequests, closeRequests] = usePopUp();
+  const [isRatingOpen, openRating, closeRating] = usePopUp();
 
   /* const leaveTrip = () => {
     leaveRide({
@@ -49,11 +57,27 @@ function Trip({
     setJoinMessage(() => value);
   };
 
+  const handleRating = (e) => {
+    const { value } = e.target;
+    setRating(() => value);
+  };
+
   const validateJoinMessage = () => {
     const value = joinMessage;
 
     if (!(value?.length > 0)) {
       setErrors((lastVal) => ({ ...lastVal, joinMessage: 'Se necesita enviar un mensaje al conductor' }));
+      return false;
+    }
+
+    return true;
+  };
+
+  const validateRating = () => {
+    const value = rating;
+
+    if (!(value?.length > 0)) {
+      setErrors((lastVal) => ({ ...lastVal, rating: 'Se necesita una calificación de 1 a 5' }));
       return false;
     }
 
@@ -76,11 +100,44 @@ function Trip({
     });
   };
 
+  const assignPassenger = (rideId, userId) => {
+    acceptRequest({
+      uri: `${serverHost}/ride/${rideId}/assign/${userId}`,
+      headers: { authorization: token },
+      method: 'POST',
+      parse: false,
+    });
+  };
+
+  const postRating = () => {
+    if (!validateRating) return;
+    const body = { idRide: id, rating };
+    submitRating({
+      uri: `${serverHost}/ride/passenger/complete`,
+      headers: { authorization: token },
+      body: JSON.stringify(body),
+      method: 'POST',
+      parse: false,
+    });
+  };
+
   useEffect(() => {
     if (!resultPost) return;
     closeJoin();
     callback();
   }, [resultPost]);
+
+  useEffect(() => {
+    if (!resultAccept) return;
+    closeRequests();
+    callback();
+  }, [resultAccept]);
+
+  useEffect(() => {
+    if (!resultRating) return;
+    closeRating();
+    callback();
+  }, [resultRating]);
 
   useEffect(() => {
     if (!isJoinOpen) return;
@@ -89,7 +146,10 @@ function Trip({
   }, [isJoinOpen]);
 
   useEffect(() => {
-  }, [joinMessage]);
+    if (!isRatingOpen) return;
+    setRating(5);
+    setErrors({});
+  }, [isRatingOpen]);
 
   return (
     <div className={styles.tripContainer}>
@@ -143,9 +203,11 @@ function Trip({
       </div>
 
       {!owner && !joined && <Button className={styles.button} text="Solicitar unirse" onClick={openJoin} disabled={loadingPost} />}
+      {owner && <Button className={styles.button} text="Solicitudes de pasajeros" onClick={openRequests} disabled={loadingPost} />}
+      {!owner && completed && <Button className={styles.button} text="Calificar viaje" onClick={openRating} disabled={loadingPost} />}
 
       {isJoinOpen && (
-        <PopUp close={closeJoin} closeButton>
+        <PopUp close={closeJoin} closeWithBackground>
           <div className={styles.joinRequest}>
             <p className={styles.popUpTitle}>Envía un mensaje al conductor del viaje</p>
             <InputText
@@ -158,6 +220,52 @@ function Trip({
             />
             <Button className={styles.joinButton} text="Enviar solicitud" onClick={joinTrip} disabled={loadingPost} />
           </div>
+        </PopUp>
+      )}
+      {isRequestsOpen && (
+        <PopUp close={closeRequests} closeWithBackground>
+          <div className={styles.requestPopup}>
+            <p className={styles.popUpTitle}>
+              Aquí puedes aceptar o rechazar solicitudes de pasajeros para tu viaje
+            </p>
+            {requests && (
+              <div className={styles.requestContainerTitle}>
+                <p className={styles.requestTitle}>Solicitante</p>
+                <p className={styles.requestTitle}>Mensaje</p>
+              </div>
+            )}
+            {requests?.map((request) => (
+              <div className={styles.requestContainer}>
+                <p className={styles.requestName}>{request.user.name}</p>
+                <p className={styles.requestMessage}>{request.message}</p>
+                <div className={styles.requestButtonsContainer}>
+                  <Button className={styles.requestButton} text="Aceptar" onClick={() => assignPassenger(id, request.user.id)} disabled={loadingAccept} />
+                </div>
+              </div>
+            ))}
+            {!requests && (
+              <p>No tienes solicitudes pendientes</p>
+            )}
+          </div>
+        </PopUp>
+      )}
+      {isRatingOpen && (
+        <PopUp close={closeRating} closeWithBackground>
+          <div className={styles.requestPopup}>
+            <p className={styles.popUpTitle}>
+              ¿Cómo estuvo este viaje siendo pasajero?
+            </p>
+            <InputNumber
+              title="Calificación"
+              name="rating"
+              value={rating}
+              onChange={handleRating}
+              error={errors.rating}
+              onBlur={() => validateRating}
+              onFocus={clearError}
+            />
+          </div>
+          <Button className={styles.joinButton} text="Enviar calificación" onClick={postRating} disabled={loadingRating} />
         </PopUp>
       )}
     </div>
@@ -181,6 +289,19 @@ Trip.propTypes = {
   joined: PropTypes.bool.isRequired,
   callback: PropTypes.func.isRequired,
   owner: PropTypes.bool,
+  completed: PropTypes.bool.isRequired,
+  requests: PropTypes.arrayOf(PropTypes.shape({
+    user: PropTypes.shape({
+      gender: PropTypes.string,
+      phone: PropTypes.string,
+      name: PropTypes.string,
+      id: PropTypes.string,
+      email: PropTypes.string,
+    }),
+    date: PropTypes.string,
+    approved: PropTypes.string,
+    message: PropTypes.string,
+  })),
 };
 
 Trip.defaultProps = {
@@ -188,6 +309,7 @@ Trip.defaultProps = {
   realArrivalTime: '',
   realStartTime: '',
   comment: '',
+  requests: null,
 };
 
 export default Trip;

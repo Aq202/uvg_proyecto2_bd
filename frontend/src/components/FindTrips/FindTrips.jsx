@@ -193,6 +193,8 @@ function FindTrips() {
               callback={refreshTrips}
               owner={trip.isDriver}
               driver={trip.driver?.name}
+              completed={trip.completed}
+              requests={trip.requests ? trip.requests : null}
             />
           ))}
         </div>
