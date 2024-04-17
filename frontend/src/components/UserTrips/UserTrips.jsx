@@ -362,6 +362,7 @@ function UserTrips() {
               driver={trip.driver?.name}
               completed={trip.completed}
               requests={trip.requests ? trip.requests : null}
+              started={trip.driver.onMyWay}
             />
           ))}
         </div>
