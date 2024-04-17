@@ -35,6 +35,7 @@ function Trip({
   requests,
   started,
   deleteTrip,
+  requested,
   // editPlace,
 }) {
   const { callFetch: joinRide, result: resultPost, loading: loadingPost } = useFetch();
@@ -366,7 +367,13 @@ function Trip({
         )}
       </div>
 
-      {!owner && !joined && !completed && <Button className={styles.button} text="Solicitar unirse" onClick={openJoin} disabled={loadingPost} />}
+      {!owner && !joined && requested
+        && (
+          <div className={styles.message}>
+            <p>Esperando actualización de solicitud.</p>
+          </div>
+        )}
+      {!owner && !joined && !completed && !requested && <Button className={styles.button} text="Solicitar unirse" onClick={openJoin} disabled={loadingPost} />}
       {!owner && joined && <Button className={styles.button} text="Enviar comentarios" onClick={openComment} disabled={loadingPost} />}
       {owner && <Button className={styles.button} text={started ? 'Finalizar viaje' : 'Iniciar viaje'} onClick={started ? openEnd : openStart} disabled={loadingPost} />}
       {owner && (
@@ -399,7 +406,7 @@ function Trip({
             <p className={styles.popUpTitle}>
               Aquí puedes aceptar o rechazar solicitudes de pasajeros para tu viaje
             </p>
-            {requests && (
+            {requests && requests.some((request) => request.approved !== true) && (
               <div className={styles.requestContainerTitle}>
                 <p className={styles.requestTitle}>Solicitante</p>
                 <p className={styles.requestTitle}>Mensaje</p>
@@ -414,7 +421,7 @@ function Trip({
               </div>
             )}
             {requests
-              ?.filter((value, index, self) => self.indexOf(value) === index)
+              ?.filter((request) => request.approved !== true)
               .map((request) => (
                 <div className={styles.requestContainer}>
                   <p className={styles.requestName}>{request.user.name}</p>
@@ -424,7 +431,7 @@ function Trip({
                   </div>
                 </div>
               ))}
-            {!requests && (
+            {(!requests || !requests.some((request) => request.approved !== true)) && (
               <p>No tienes solicitudes pendientes</p>
             )}
           </div>
@@ -550,6 +557,7 @@ Trip.propTypes = {
   realArrivalTime: PropTypes.string,
   comment: PropTypes.string,
   joined: PropTypes.bool.isRequired,
+  requested: PropTypes.bool.isRequired,
   callback: PropTypes.func.isRequired,
   owner: PropTypes.bool,
   completed: PropTypes.bool.isRequired,

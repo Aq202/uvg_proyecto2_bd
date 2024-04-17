@@ -105,7 +105,7 @@
     cursor: pointer;
 }
 
-.actionsContainer{
+.actionsContainer {
     display: flex;
     width: 100%;
     justify-content: end;
@@ -119,7 +119,21 @@
     margin: 10px 10px 0 auto;
 }
 
-.acceptAll{
+.acceptAll {
     white-space: nowrap;
     margin-left: -53px;
+}
+
+.message {
+    width: 100%;
+    display: flex;
+    justify-content: end;
+}
+
+.message p {
+    padding: 10px;
+    border-radius: 10px;
+    background-color: gray;
+    width: fit-content;
+    color: white;
 }

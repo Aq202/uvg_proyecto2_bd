@@ -161,8 +161,6 @@ function Places() {
     if (!validateOpenTime(placeToEdit.openTime)) hasError = true;
     if (!validateCloseTime(placeToEdit.closeTime)) hasError = true;
 
-    console.log(hasError);
-
     if (hasError) return;
 
     putLocation({
