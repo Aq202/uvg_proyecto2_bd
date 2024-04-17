@@ -1,4 +1,4 @@
-.tripContainer{
+.tripContainer {
     display: flex;
     flex-direction: column;
     padding: 10px;
@@ -7,40 +7,40 @@
     margin-top: 10px;
 }
 
-.headerSection{
+.headerSection {
     display: flex;
     flex-direction: row;
     align-items: center;
     justify-content: space-evenly;
 }
 
-.arrow{
+.arrow {
     width: 7%;
     height: 7%;
 }
 
-.placeName{
+.placeName {
     font-size: large;
     font-weight: bold;
     margin: 0;
 }
 
-.placeAddress{
+.placeAddress {
     margin: 0;
 }
 
-.infoSection{
+.infoSection {
     margin-top: 16px;
     display: grid;
     grid-template-columns: repeat(2, 1fr);
 }
 
-.infoBlock{
+.infoBlock {
     display: flex;
     flex-direction: row;
 }
 
-.infoTitle{
+.infoTitle {
     margin: 0 10px 0 0;
 }
 
@@ -48,58 +48,68 @@
     margin: 0;
 }
 
-.button{
-    width: fit-content;
-    margin: 10px 10px 0 auto;
-}
-
-.joinRequest{
+.joinRequest {
     display: flex;
     flex-direction: column;
     align-items: center;
 }
 
-.joinButton{
+.joinButton {
     width: fit-content;
     margin-top: 25px;
 }
 
-.popUpTitle{
+.popUpTitle {
     margin: 0;
     margin-bottom: 15px;
 }
 
-.requestPopup{
+.requestPopup {
     display: flex;
     flex-direction: column;
     align-items: center;
 }
 
-.ratingPopup{
+.ratingPopup {
     display: flex;
     flex-direction: column;
     align-items: center;
 }
 
-.requestContainer{
+.requestContainer {
     display: flex;
     width: 100%;
     justify-content: space-between;
     align-items: center;
 }
 
-.requestContainerTitle{
+.requestContainerTitle {
     display: flex;
     width: 100%;
     align-items: center;
     gap: 33%
 }
 
-.requestButtonsContainer{
+.requestButtonsContainer {
     display: flex;
     gap: 2%;
 }
 
-.requestTitle{
+.requestTitle {
     font-weight: 600;
+}
+
+.deleteIcon {
+    width: 2rem;
+    height: 2rem;
+    cursor: pointer;
+}
+
+.actionsContainer{
+    display: flex;
+    width: 100%;
+    justify-content: end;
+    align-items: center;
+    gap: 10px;
+    margin-top: 10px;
 }
