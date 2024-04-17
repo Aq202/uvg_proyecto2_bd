@@ -11,6 +11,7 @@ import PopUp from '../PopUp/PopUp';
 import usePopUp from '../../hooks/usePopUp';
 import InputText from '../InputText';
 import InputNumber from '../InputNumber/InputNumber';
+import InputCheck from '../InputCheck/InputCheck';
 
 function Trip({
   id,
@@ -31,6 +32,7 @@ function Trip({
   owner,
   completed, // Pendiente: Verificar si ya se inició el viaje
   requests,
+  started,
   deleteTrip,
   // editPlace,
 }) {
@@ -38,9 +40,13 @@ function Trip({
   const { callFetch: acceptRequest, result: resultAccept, loading: loadingAccept } = useFetch();
   const { callFetch: submitRating, result: resultRating, loading: loadingRating } = useFetch();
   const { callFetch: submitComment, result: resultComment, loading: loadingComment } = useFetch();
+  const { callFetch: submitStart, result: resultStart, loading: loadingStart } = useFetch();
+  const { callFetch: submitEnd, result: resultEnd, loading: loadingEnd } = useFetch();
   // const { callFetch: leaveRide, result: resultDelete, loading: loadingDelete } = useFetch();
   const [errors, setErrors] = useState({});
   const [joinMessage, setJoinMessage] = useState('Hola, ¿me podrías llevar?');
+  const [startForm, setStartForm] = useState({ wantsToTalk: false, inAHurry: false, waitTime: 0 });
+  const [endForm, setEndForm] = useState({ onTime: false });
   const [passengerComment, setPassengerComment] = useState('¡Gracias por aceptarme!');
   const [rating, setRating] = useState(5);
   const token = useToken();
@@ -48,6 +54,8 @@ function Trip({
   const [isRequestsOpen, openRequests, closeRequests] = usePopUp();
   const [isRatingOpen, openRating, closeRating] = usePopUp();
   const [isCommentOpen, openComment, closeComment] = usePopUp();
+  const [isStartOpen, openStart, closeStart] = usePopUp();
+  const [isEndOpen, openEnd, closeEnd] = usePopUp();
 
   /* const leaveTrip = () => {
     leaveRide({
@@ -71,6 +79,18 @@ function Trip({
   const handleRating = (e) => {
     const { value } = e.target;
     setRating(() => value);
+  };
+
+  const handleStartFormChange = (e) => {
+    const { name } = e.target;
+    const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
+    setStartForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleEndFormChange = (e) => {
+    const { name } = e.target;
+    const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
+    setEndForm((prev) => ({ ...prev, [name]: value }));
   };
 
   const validateJoinMessage = () => {
@@ -99,6 +119,39 @@ function Trip({
 
     if (!(value?.length > 0)) {
       setErrors((lastVal) => ({ ...lastVal, rating: 'Se necesita una calificación de 1 a 5' }));
+      return false;
+    }
+
+    return true;
+  };
+
+  const validateWaitTime = () => {
+    const value = startForm.waitTime;
+
+    if (!(value?.length > 0)) {
+      setErrors((lastVal) => ({ ...lastVal, waitTime: 'Se necesita un tiempo máximo de espera' }));
+      return false;
+    }
+
+    return true;
+  };
+
+  const validateStartComment = () => {
+    const value = startForm.startComment;
+
+    if (!(value?.length > 0)) {
+      setErrors((lastVal) => ({ ...lastVal, startComment: 'Se necesita información adicional' }));
+      return false;
+    }
+
+    return true;
+  };
+
+  const validateEndComment = () => {
+    const value = endForm.endComment;
+
+    if (!(value?.length > 0)) {
+      setErrors((lastVal) => ({ ...lastVal, endComment: 'Se necesita enviar un mensaje a los pasajeros' }));
       return false;
     }
 
@@ -154,6 +207,37 @@ function Trip({
     });
   };
 
+  const startTrip = () => {
+    if (!validateStartComment) return;
+    if (!validateWaitTime) return;
+    const body = {
+      idRide: id,
+      wantsToTalk: startForm.wantsToTalk,
+      inAHurry: startForm.inAHurry,
+      waitTime: startForm.waitTime,
+      comment: startForm.startComment,
+    };
+    submitStart({
+      uri: `${serverHost}/ride/start`,
+      headers: { authorization: token },
+      body: JSON.stringify(body),
+      method: 'PATCH',
+      parse: false,
+    });
+  };
+
+  const endTrip = () => {
+    if (!validateEndComment) return;
+    const body = { idRide: id, comment: endForm.endComment, onTime: endForm.onTime };
+    submitEnd({
+      uri: `${serverHost}/ride/finish`,
+      headers: { authorization: token },
+      body: JSON.stringify(body),
+      method: 'PATCH',
+      parse: false,
+    });
+  };
+
   useEffect(() => {
     if (!resultPost) return;
     closeJoin();
@@ -179,6 +263,18 @@ function Trip({
   }, [resultComment]);
 
   useEffect(() => {
+    if (!resultStart) return;
+    closeStart();
+    callback();
+  }, [resultStart]);
+
+  useEffect(() => {
+    if (!resultEnd) return;
+    closeEnd();
+    callback();
+  }, [resultEnd]);
+
+  useEffect(() => {
     if (!isJoinOpen) return;
     setJoinMessage('Hola, ¿me podrías llevar?');
     setErrors({});
@@ -195,6 +291,18 @@ function Trip({
     setPassengerComment('¡Gracias por aceptarme!');
     setErrors({});
   }, [isCommentOpen]);
+
+  useEffect(() => {
+    if (!isStartOpen) return;
+    setStartForm({ wantsToTalk: false, inAHurry: false, waitTime: 0 });
+    setErrors({});
+  }, [isStartOpen]);
+
+  useEffect(() => {
+    if (!isEndOpen) return;
+    setEndForm({ onTime: false });
+    setErrors({});
+  }, [isEndOpen]);
 
   return (
     <div className={styles.tripContainer}>
@@ -249,6 +357,8 @@ function Trip({
 
       {!owner && !joined && !completed && <Button className={styles.button} text="Solicitar unirse" onClick={openJoin} disabled={loadingPost} />}
       {!owner && joined && <Button className={styles.button} text="Enviar comentarios" onClick={openComment} disabled={loadingPost} />}
+      {owner && <Button className={styles.button} text="Solicitudes de pasajeros" onClick={openRequests} disabled={loadingPost} />}
+      {owner && <Button className={styles.button} text={started ? 'Finalizar viaje' : 'Iniciar viaje'} onClick={started ? openEnd : openStart} disabled={loadingPost} />}
       {owner && (
         <div className={styles.actionsContainer}>
           <DeleteIcon className={styles.deleteIcon} onClick={deleteTrip} />
@@ -337,6 +447,70 @@ function Trip({
           </div>
         </PopUp>
       )}
+      {isStartOpen && (
+        <PopUp close={closeStart} closeWithBackground>
+          <div className={styles.joinRequest}>
+            <p className={styles.popUpTitle}>
+              Ingresa los detalles para iniciar el viaje
+            </p>
+            <InputCheck
+              title="No me molesta conversar con pasajeros"
+              name="wantsToTalk"
+              value={startForm.wantsToTalk}
+              onChange={handleStartFormChange}
+            />
+            <InputCheck
+              title="Tengo prisa"
+              name="inAHurry"
+              value={startForm.inAHurry}
+              onChange={handleStartFormChange}
+            />
+            <InputNumber
+              title="Tiempo máximo de espera"
+              name="waitTime"
+              value={startForm.waitTime}
+              onChange={handleStartFormChange}
+              error={errors.waitTime}
+              onBlur={() => validateWaitTime}
+              onFocus={clearError}
+            />
+            <InputText
+              name="startComment"
+              title="Información adicional"
+              value={startForm.startComment}
+              error={errors.startComment}
+              onChange={handleStartFormChange}
+              onBlur={validateStartComment}
+              onFocus={clearError}
+            />
+            <Button className={styles.joinButton} text="Empezar viaje" onClick={startTrip} disabled={loadingStart} />
+          </div>
+        </PopUp>
+      )}
+      {isEndOpen && (
+        <PopUp close={closeEnd} closeWithBackground>
+          <div className={styles.joinRequest}>
+            <p className={styles.popUpTitle}>
+              Ingresa los detalles para finalizar el viaje
+            </p>
+            <InputText
+              name="endComment"
+              value={endForm.endComment}
+              error={errors.endComment}
+              onChange={handleEndFormChange}
+              onBlur={validateEndComment}
+              onFocus={clearError}
+            />
+            <InputCheck
+              title="Llegamos a tiempo"
+              name="onTime"
+              value={endForm.onTime}
+              onChange={handleEndFormChange}
+            />
+            <Button className={styles.joinButton} text="Finalizar viaje" onClick={endTrip} disabled={loadingEnd} />
+          </div>
+        </PopUp>
+      )}
     </div>
   );
 }
@@ -372,6 +546,7 @@ Trip.propTypes = {
     approved: PropTypes.string,
     message: PropTypes.string,
   })),
+  started: PropTypes.bool.isRequired,
 };
 
 Trip.defaultProps = {
