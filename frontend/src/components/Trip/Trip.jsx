@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import { FaLongArrowAltRight as ArrowIcon } from 'react-icons/fa';
+import { RiDeleteBin6Line as DeleteIcon } from 'react-icons/ri';
 import styles from './Trip.module.css';
 import Button from '../Button';
 import useFetch from '../../hooks/useFetch';
@@ -30,6 +31,8 @@ function Trip({
   owner,
   completed, // Pendiente: Verificar si ya se inició el viaje
   requests,
+  deleteTrip,
+  // editPlace,
 }) {
   const { callFetch: joinRide, result: resultPost, loading: loadingPost } = useFetch();
   const { callFetch: acceptRequest, result: resultAccept, loading: loadingAccept } = useFetch();
@@ -225,28 +228,33 @@ function Trip({
           <p className={styles.infoDescription}>{arrivalTime}</p>
         </div>
         {realStartTime && (
-        <div className={styles.infoBlock}>
-          <p className={styles.infoTitle}>Salida real:</p>
-          <p className={styles.infoDescription}>{realStartTime}</p>
-        </div>
+          <div className={styles.infoBlock}>
+            <p className={styles.infoTitle}>Salida real:</p>
+            <p className={styles.infoDescription}>{realStartTime}</p>
+          </div>
         )}
         {realArrivalTime && (
-        <div className={styles.infoBlock}>
-          <p className={styles.infoTitle}>Llegada real:</p>
-          <p className={styles.infoDescription}>{realArrivalTime}</p>
-        </div>
+          <div className={styles.infoBlock}>
+            <p className={styles.infoTitle}>Llegada real:</p>
+            <p className={styles.infoDescription}>{realArrivalTime}</p>
+          </div>
         )}
         {comment && (
-        <div className={styles.comment}>
-          <p className={styles.infoTitle}>Información adicional:</p>
-          <p className={styles.infoDescription}>{comment}</p>
-        </div>
+          <div className={styles.comment}>
+            <p className={styles.infoTitle}>Información adicional:</p>
+            <p className={styles.infoDescription}>{comment}</p>
+          </div>
         )}
       </div>
 
       {!owner && !joined && <Button className={styles.button} text="Solicitar unirse" onClick={openJoin} disabled={loadingPost} />}
       {!owner && joined && <Button className={styles.button} text="Enviar comentarios" onClick={openComment} disabled={loadingPost} />}
-      {owner && <Button className={styles.button} text="Solicitudes de pasajeros" onClick={openRequests} disabled={loadingPost} />}
+      {owner && (
+        <div className={styles.actionsContainer}>
+          <DeleteIcon className={styles.deleteIcon} onClick={deleteTrip} />
+          <Button className={styles.button} text="Solicitudes de pasajeros" onClick={openRequests} disabled={loadingPost} />
+        </div>
+      )}
       {!owner && completed && <Button className={styles.button} text="Calificar viaje" onClick={openRating} disabled={loadingPost} />}
 
       {isJoinOpen && (
@@ -351,6 +359,7 @@ Trip.propTypes = {
   callback: PropTypes.func.isRequired,
   owner: PropTypes.bool,
   completed: PropTypes.bool.isRequired,
+  deleteTrip: PropTypes.bool.isRequired,
   requests: PropTypes.arrayOf(PropTypes.shape({
     user: PropTypes.shape({
       gender: PropTypes.string,

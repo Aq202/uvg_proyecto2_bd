@@ -8,6 +8,7 @@ import FindTrips from '../../components/FindTrips';
 import Places from '../../components/Places/Places';
 import Profile from '../../components/Profile';
 import Charts from '../../components/Charts';
+import Users from '../../components/Users';
 import UploadUsers from '../../components/UploadUsers';
 
 function MainPage() {
@@ -28,6 +29,7 @@ function MainPage() {
         {currentSection === 'profile' && <Profile />}
         {currentSection === 'charts' && <Charts />}
         {currentSection === 'upload' && <UploadUsers />}
+        {currentSection === 'users' && <Users />}
       </div>
     </div>
   );
