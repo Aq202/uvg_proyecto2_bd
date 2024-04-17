@@ -224,6 +224,29 @@ const assignHome = async ({idUser, idLocation, isOwner, postalCode, livesAlone}:
     await session.close();
 }
 
+const getHome = async ({idUser}: {idUser: string}) => {
+	const session = Connection.driver.session();
+
+	const result = await session.run(
+		`	MATCH (:User {id: $idUser})-[l_rel:lives_at]->(l:Location)
+			RETURN l as location, l_rel AS user_lives_at_rel
+			LIMIT 1`,
+		{ idUser }
+	);
+
+	if (result.records.length === 0) return null;
+
+	const home = {
+		...result.records[0].get("location").properties,
+		...result.records[0].get("user_lives_at_rel").properties,
+
+	}
+
+	await session.close();
+
+	return home;
+}
+
 export {
 	createCity,
 	createLocation,
@@ -234,4 +257,5 @@ export {
 	getCountries,
 	getCities,
 	assignHome,
+	getHome,
 };

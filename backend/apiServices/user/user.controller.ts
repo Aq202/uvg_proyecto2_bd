@@ -6,6 +6,7 @@ import hash from "hash.js";
 import { connection } from "../../db/connection.js";
 import { GridFSBucket } from "mongodb";
 import CustomError from "../../utils/customError.js";
+import { getHome } from "../location/location.model.js";
 
 
 const createUserController = async (req: AppRequest, res: AppResponse) => {
@@ -78,7 +79,8 @@ const getSessionUserController = async (req: AppRequest, res: AppResponse) => {
 	try {
 		if (!req.session) return;
 		const user = req.session;
-		res.send(user);
+		const home = await getHome({idUser: user.id})
+		res.send({...user, home});
 	} catch (ex) {
 		await errorSender({
 			res,

@@ -123,5 +123,8 @@ type AddressedToRel = {
 	comment: string;
 }
 
-
-
+type LivesAtRel = {
+	isOwner: boolean;
+	postalCode: number;
+	livesAlone: boolean;
+}
