@@ -1,0 +1,255 @@
+.mainContainer {
+    padding: 4%;
+    display: flex;
+    flex-direction: column;
+}
+
+.headerSection {
+    display: flex;
+    width: 100%;
+    align-items: center;
+}
+
+.title {
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.filtersContainer {
+    display: flex;
+    flex-direction: row;
+    margin-left: auto;
+}
+
+.filterContainer {
+    display: flex;
+    margin: 0 5px 0 5px;
+}
+
+.pagination {
+    align-self: center;
+    margin-top: 16px;
+}
+
+.form {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    column-gap: 100px;
+    row-gap: 20px;
+}
+
+.form input {
+    max-width: 100% !important;
+}
+
+.phone {
+    display: flex;
+    flex-direction: row;
+    gap: 15px;
+    margin-top: 25px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.phone div {
+    margin: 0;
+}
+
+.prefix {
+    width: 33%;
+}
+
+.mainInfo {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    box-sizing: border-box;
+    align-items: center;
+    justify-content: center;
+}
+
+.mainInfo img {
+    border-radius: 100%;
+    width: 20vw;
+    aspect-ratio: 1/1;
+    object-fit: cover;
+    object-position: 0 50;
+}
+
+.aditionalInfo {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    box-sizing: border-box;
+    align-items: center;
+    justify-content: center;
+}
+
+.buttonContainer {
+    column-span: span 2;
+}
+
+.buttonWrapper {
+    grid-column: span 2;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+}
+
+.errorMessage {
+    grid-column: span 2;
+    color: red;
+    text-align: center;
+}
+
+.vehiclesContainer {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    flex-direction: column;
+    align-items: center;
+}
+
+.vehiclesContainer table {
+    width: 60%;
+    border-collapse: collapse;
+}
+
+.vehiclesContainer table tr {
+    margin-bottom: 30px;
+}
+
+.vehiclesContainer table td {
+    width: fit-content;
+    text-align: center;
+    padding-bottom: 15px;
+    vertical-align: top;
+}
+
+.inputText {
+    margin: 0;
+    display: inline;
+    font-size: 15px;
+}
+
+.inputText span{
+    font-size: 12px !important;
+}
+.inputText label{
+    height: fit-content !important;
+}
+
+.vehiclesContainer table td input {
+    width: 100%;
+    border-radius: 3px;
+    outline: 0;
+    border: 1px solid gray;
+    padding: 5px 8px;
+    box-sizing: border-box;
+    margin: 0;
+    min-width: 70px;
+}
+
+.vehiclesContainer table td img {
+    width: 100%;
+    margin-right: 30px;
+}
+
+.colorpicker {
+    border-radius: 100%;
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    width: 20px;
+    height: 20px;
+    border: 1px solid black;
+    cursor: pointer;
+    display: block;
+    padding: 0;
+}
+
+.colorPickerWindow {
+    position: absolute;
+    bottom: 100%;
+    left: 100%;
+}
+
+.helperText {
+    font-size: 12px;
+    position: absolute;
+    display: none;
+    bottom: 100%;
+    left: 100%;
+    white-space: nowrap;
+    background-color: gray;
+    color: white;
+    border-radius: 5px;
+    padding: 0 5px;
+    width: fit-content;
+}
+
+.colorpicker:hover .helperText {
+    display: block;
+}
+
+.buttonsContainer {
+    display: flex;
+    align-items: center;
+    width: fit-content;
+    gap: 15px;
+}
+
+.slider {
+    position: relative;
+}
+
+.leftArrow:focus,
+.rightArrow:focus {
+    border: none;
+    outline: none;
+}
+
+.leftArrow,
+.rightArrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: transparent;
+    border: none;
+    padding: 0;
+    width: 10px;
+    height: 10px;
+    border-radius: 100%;
+}
+
+.leftArrow {
+    left: -20px;
+}
+
+.rightArrow {
+    right: -15px;
+}
+
+@media (max-aspect-ratio: 1/1) {
+    .filtersContainer {
+        margin-left: 0;
+    }
+
+    .form {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .mainInfo img {
+        width: 80%;
+    }
+}
+
+@media (max-aspect-ratio: 1/1) {
+    .headerSection {
+        flex-direction: column;
+        margin-bottom: 16px;
+    }
+}

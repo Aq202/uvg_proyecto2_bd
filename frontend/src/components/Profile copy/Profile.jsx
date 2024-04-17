@@ -2,16 +2,15 @@ import React, { useEffect, useState } from 'react';
 // eslint-disable-next-line import/no-extraneous-dependencies
 import parsePhoneNumber from 'libphonenumber-js';
 import styles from './Profile.module.css';
-import useFetch from '../../hooks/useFetch';
-import useToken from '../../hooks/useToken';
+import useFetch from '../../hooks/useFetch.js';
+import useToken from '../../hooks/useToken.js';
 import { button, blue } from '../../styles/buttons.module.css';
-import { serverHost } from '../../config';
+import { serverHost } from '../../config.js';
 import countries from '../../assets/countries.ts';
-import InputText from '../InputText/InputText';
-import InputSelect from '../InputSelect/InputSelect';
-import Spinner from '../Spinner/Spinner';
-import useSessionData from '../../hooks/useSessionData';
-import Vehicles from '../Vehicles/Vehicles';
+import InputText from '../InputText/InputText.jsx';
+import InputSelect from '../InputSelect/InputSelect.jsx';
+import Spinner from '../Spinner/Spinner.jsx';
+import useSessionData from '../../hooks/useSessionData.js';
 
 function Profile() {
   const token = useToken();
@@ -293,8 +292,10 @@ function Profile() {
             )}
           {loading && <Spinner />}
         </div>
+        <div>
+          Vehículos
+        </div>
       </form>
-      <Vehicles />
     </div>
   );
 }
