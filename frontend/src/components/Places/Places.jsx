@@ -15,8 +15,12 @@ import countries from '../../assets/countries.ts';
 import InputTime from '../InputTime/InputTime';
 import InputNumber from '../InputNumber/InputNumber';
 import InputCheck from '../InputCheck/InputCheck';
+import useSessionData from '../../hooks/useSessionData';
 
 function Places() {
+  const token = useToken();
+  const [userData, setUserdata] = useState(useSessionData());
+  const hasHome = userData?.home?.id !== null || undefined;
   const [filters, setFilters] = useState({});
   const [places, setPlaces] = useState([]);
   const [currentPage, setCurrentPage] = useState(0);
@@ -33,13 +37,15 @@ function Places() {
     error: errorGet,
     loading: loadingGet,
   } = useFetch();
+  const {
+    callFetch: fetchUserData,
+    result: resultGetUser,
+  } = useFetch();
   const { callFetch: putLocation, result: resultPut, loading: loadingPut } = useFetch();
   const { callFetch: postLocation, result: resultPost, loading: loadingPost } = useFetch();
   const { callFetch: deleteLocation, result: resultDelete } = useFetch();
   const { callFetch: fetchCities, result: resultCities } = useFetch();
   const [cities, setCities] = useState([]);
-
-  const token = useToken();
 
   const clearError = (e) => {
     setErrors((lastVal) => ({ ...lastVal, [e.target.name]: null }));
@@ -111,6 +117,13 @@ function Places() {
   const editPlace = (id, name, address, city, country) => {
     setPlaceToEdit({
       id, name, address, city, country,
+    });
+  };
+
+  const getUser = () => {
+    fetchUserData({
+      uri: `${serverHost}/user`,
+      headers: { authorization: token },
     });
   };
 
@@ -260,6 +273,14 @@ function Places() {
     console.log(placeToCreate);
   }, [placeToCreate]);
 
+  useEffect(() => {
+    if (resultGetUser) setUserdata(resultGetUser);
+  }, [resultGetUser]);
+
+  useEffect(() => {
+    getUser();
+  }, []);
+
   return (
     <div className={styles.mainContainer}>
       <div className={styles.headerSection}>
@@ -272,14 +293,19 @@ function Places() {
 
       {!errorGet && (
         <div className={styles.placesContainer}>
-          {places?.map((place) => (
+          {places?.map((place, index) => (
             <Place
+              hasHome={hasHome}
+              homeId={userData?.home?.id}
+              right={index % 2 === 0}
               location={`${place.city.name}, ${place.city.country}`}
               name={place.name}
               address={place.address}
               parking={place.parking}
               openTime={place.openTime}
               closeTime={place.closeTime}
+              refetch={() => refreshPlaces}
+              id={place.id}
               editPlace={() => editPlace(
                 place.id,
                 place.name,
@@ -297,156 +323,156 @@ function Places() {
       {loadingGet && <Spinner />}
 
       {isEditOpen && (
-      <PopUp close={closeEdit} closeWithBackground>
-        <div className={styles.editPlace}>
-          <h2 className={styles.editPlaceTitle}>Detalles de lugar</h2>
-          <InputText
-            title="Nombre"
-            name="name"
-            value={placeToEdit.name}
-            onChange={handleEditFormChange}
-            error={errors.name}
-            onBlur={() => validateName(placeToEdit.name)}
-            onFocus={clearError}
-          />
-          <InputText
-            title="Dirección"
-            name="address"
-            value={placeToEdit.address}
-            onChange={handleEditFormChange}
-            error={errors.address}
-            onBlur={() => validateAddress(placeToEdit.address)}
-            onFocus={clearError}
-          />
-          <InputSelect
-            title="País"
-            className={styles.inputSelect}
-            options={countries.map((country) => (
-              { value: country.name, title: country.name }))}
-            name="country"
-            value={placeToEdit.country}
-            onChange={handleEditFormChange}
-            error={errors.country}
-            onBlur={() => validateCountry(placeToEdit.country)}
-            onFocus={clearError}
-          />
-          <InputText
-            title="Ciudad"
-            name="city"
-            value={placeToEdit.city}
-            onChange={handleEditFormChange}
-            error={errors.city}
-            onBlur={() => validateCity(placeToEdit.city)}
-            onFocus={clearError}
-          />
-          <Button text="Actualizar" className={styles.updateButton} onClick={updateLocation} disabled={loadingPut} />
-        </div>
-      </PopUp>
+        <PopUp close={closeEdit} closeWithBackground>
+          <div className={styles.editPlace}>
+            <h2 className={styles.editPlaceTitle}>Detalles de lugar</h2>
+            <InputText
+              title="Nombre"
+              name="name"
+              value={placeToEdit.name}
+              onChange={handleEditFormChange}
+              error={errors.name}
+              onBlur={() => validateName(placeToEdit.name)}
+              onFocus={clearError}
+            />
+            <InputText
+              title="Dirección"
+              name="address"
+              value={placeToEdit.address}
+              onChange={handleEditFormChange}
+              error={errors.address}
+              onBlur={() => validateAddress(placeToEdit.address)}
+              onFocus={clearError}
+            />
+            <InputSelect
+              title="País"
+              className={styles.inputSelect}
+              options={countries.map((country) => (
+                { value: country.name, title: country.name }))}
+              name="country"
+              value={placeToEdit.country}
+              onChange={handleEditFormChange}
+              error={errors.country}
+              onBlur={() => validateCountry(placeToEdit.country)}
+              onFocus={clearError}
+            />
+            <InputText
+              title="Ciudad"
+              name="city"
+              value={placeToEdit.city}
+              onChange={handleEditFormChange}
+              error={errors.city}
+              onBlur={() => validateCity(placeToEdit.city)}
+              onFocus={clearError}
+            />
+            <Button text="Actualizar" className={styles.updateButton} onClick={updateLocation} disabled={loadingPut} />
+          </div>
+        </PopUp>
       )}
 
       {isCreateOpen && (
-      <PopUp close={closeCreate} closeWithBackground>
-        <div className={styles.editPlace}>
-          <h2 className={styles.editPlaceTitle}>Detalles de lugar</h2>
-          <p className={styles.createDescription}>
-            Registra una ubicación para usar en alguno de tus viajes
-          </p>
-          <InputText
-            title="Nombre"
-            name="name"
-            value={placeToCreate.name}
-            onChange={handleCreateFormChange}
-            error={errors.name}
-            onBlur={() => validateName(placeToCreate.name)}
-            onFocus={clearError}
-          />
-          <InputText
-            title="Dirección"
-            name="address"
-            value={placeToCreate.address}
-            onChange={handleCreateFormChange}
-            error={errors.address}
-            onBlur={() => validateAddress(placeToCreate.address)}
-            onFocus={clearError}
-          />
-          <div className={styles.timesSection}>
-            <InputTime
-              title="Hora de apertura"
-              name="openTime"
-              value={placeToCreate.openTime}
+        <PopUp close={closeCreate} closeWithBackground>
+          <div className={styles.editPlace}>
+            <h2 className={styles.editPlaceTitle}>Detalles de lugar</h2>
+            <p className={styles.createDescription}>
+              Registra una ubicación para usar en alguno de tus viajes
+            </p>
+            <InputText
+              title="Nombre"
+              name="name"
+              value={placeToCreate.name}
               onChange={handleCreateFormChange}
-              error={errors.openTime}
-              onBlur={() => validateOpenTime(placeToCreate.openTime)}
+              error={errors.name}
+              onBlur={() => validateName(placeToCreate.name)}
               onFocus={clearError}
             />
-            <InputTime
-              title="Hora de cierre"
-              name="closeTime"
-              value={placeToCreate.closeTime}
+            <InputText
+              title="Dirección"
+              name="address"
+              value={placeToCreate.address}
               onChange={handleCreateFormChange}
-              error={errors.closeTime}
-              onBlur={() => validateCloseTime(placeToCreate.closeTime)}
+              error={errors.address}
+              onBlur={() => validateAddress(placeToCreate.address)}
               onFocus={clearError}
             />
+            <div className={styles.timesSection}>
+              <InputTime
+                title="Hora de apertura"
+                name="openTime"
+                value={placeToCreate.openTime}
+                onChange={handleCreateFormChange}
+                error={errors.openTime}
+                onBlur={() => validateOpenTime(placeToCreate.openTime)}
+                onFocus={clearError}
+              />
+              <InputTime
+                title="Hora de cierre"
+                name="closeTime"
+                value={placeToCreate.closeTime}
+                onChange={handleCreateFormChange}
+                error={errors.closeTime}
+                onBlur={() => validateCloseTime(placeToCreate.closeTime)}
+                onFocus={clearError}
+              />
+            </div>
+            <InputSelect
+              title="País"
+              className={styles.inputSelect}
+              options={countries.map((country) => (
+                { value: country.name, title: country.name }))}
+              name="country"
+              value={placeToCreate.country}
+              onChange={handleCreateFormChange}
+              error={errors.country}
+              onBlur={() => validateCountry(placeToCreate.country)}
+              onFocus={clearError}
+            />
+            {cities.length > 0 && (
+              <>
+                <InputSelect
+                  title="Ciudad"
+                  className={styles.inputSelect}
+                  options={cities.map((city) => (
+                    { value: city.id, title: city.name }))}
+                  name="cityId"
+                  value={placeToCreate.cityId}
+                  onChange={handleCreateFormChange}
+                  error={errors.cityId}
+                  onBlur={() => validateCity(placeToCreate.cityId)}
+                  onFocus={clearError}
+                />
+                <InputNumber
+                  title="Distancia desde el centro (km)"
+                  name="distanceFromCityCenter"
+                  value={placeToCreate.distanceFromCityCenter}
+                  onChange={handleCreateFormChange}
+                  error={errors.distanceFromCityCenter}
+                  onBlur={() => validateDistance(placeToCreate.distanceFromCityCenter)}
+                  onFocus={clearError}
+                />
+              </>
+            )}
+            <InputCheck
+              title="El lugar cuenta con parqueo"
+              name="parking"
+              value={placeToCreate.parking}
+              onChange={handleCreateFormChange}
+            />
+            <InputCheck
+              title="El lugar se encuentra en una zona roja"
+              name="dangerArea"
+              value={placeToCreate.dangerArea}
+              onChange={handleCreateFormChange}
+            />
+            <InputCheck
+              title="El lugar se encuentra en un área urbana"
+              name="urbanArea"
+              value={placeToCreate.urbanArea}
+              onChange={handleCreateFormChange}
+            />
+            <Button text="Crear" className={styles.updateButton} onClick={createLocation} disabled={loadingPost} />
           </div>
-          <InputSelect
-            title="País"
-            className={styles.inputSelect}
-            options={countries.map((country) => (
-              { value: country.name, title: country.name }))}
-            name="country"
-            value={placeToCreate.country}
-            onChange={handleCreateFormChange}
-            error={errors.country}
-            onBlur={() => validateCountry(placeToCreate.country)}
-            onFocus={clearError}
-          />
-          {cities.length > 0 && (
-            <>
-              <InputSelect
-                title="Ciudad"
-                className={styles.inputSelect}
-                options={cities.map((city) => (
-                  { value: city.id, title: city.name }))}
-                name="cityId"
-                value={placeToCreate.cityId}
-                onChange={handleCreateFormChange}
-                error={errors.cityId}
-                onBlur={() => validateCity(placeToCreate.cityId)}
-                onFocus={clearError}
-              />
-              <InputNumber
-                title="Distancia desde el centro (km)"
-                name="distanceFromCityCenter"
-                value={placeToCreate.distanceFromCityCenter}
-                onChange={handleCreateFormChange}
-                error={errors.distanceFromCityCenter}
-                onBlur={() => validateDistance(placeToCreate.distanceFromCityCenter)}
-                onFocus={clearError}
-              />
-            </>
-          )}
-          <InputCheck
-            title="El lugar cuenta con parqueo"
-            name="parking"
-            value={placeToCreate.parking}
-            onChange={handleCreateFormChange}
-          />
-          <InputCheck
-            title="El lugar se encuentra en una zona roja"
-            name="dangerArea"
-            value={placeToCreate.dangerArea}
-            onChange={handleCreateFormChange}
-          />
-          <InputCheck
-            title="El lugar se encuentra en un área urbana"
-            name="urbanArea"
-            value={placeToCreate.urbanArea}
-            onChange={handleCreateFormChange}
-          />
-          <Button text="Crear" className={styles.updateButton} onClick={createLocation} disabled={loadingPost} />
-        </div>
-      </PopUp>
+        </PopUp>
       )}
 
       <Pagination
