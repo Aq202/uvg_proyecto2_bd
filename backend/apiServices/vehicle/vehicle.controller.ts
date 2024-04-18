@@ -1,5 +1,6 @@
 import CustomError from "../../utils/customError.js";
 import errorSender from "../../utils/errorSender.js";
+import parseDate from "../../utils/parseDate.js";
 import { createVehicle, getUserVehicles } from "./vehicle.model.js";
 
 const createVehicleController = async (req: AppRequest, res: AppResponse) => {
@@ -9,7 +10,7 @@ const createVehicleController = async (req: AppRequest, res: AppResponse) => {
 	if (!req.session) return;
   const {id } = req.session;
 	try {
-		const vehicle = await createVehicle({userId: id, type, identification, color, brand, model, year, relation: {since: new Date(since).toString(), stillOwner, price}})
+		const vehicle = await createVehicle({userId: id, type, identification, color, brand, model, year, relation: {since: parseDate(new Date()), stillOwner, price}})
 
 		res.send(vehicle);
 	} catch (ex) {
