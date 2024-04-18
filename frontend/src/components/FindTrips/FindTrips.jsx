@@ -11,6 +11,7 @@ import Spinner from '../Spinner';
 import Button from '../Button';
 import countries from '../../assets/countries.ts';
 import useSessionData from '../../hooks/useSessionData';
+import InputCheck from '../InputCheck/InputCheck';
 
 function FindTrips() {
   const userData = useSessionData();
@@ -35,7 +36,9 @@ function FindTrips() {
   };
 
   const getTrips = () => {
-    const { country, city, role } = filters;
+    const {
+      country, city, role, onlyFriends,
+    } = filters;
     const paramsObj = { passenger: false, page: currentPage, order: filters.order };
 
     if (country !== undefined && country !== '') {
@@ -44,6 +47,10 @@ function FindTrips() {
 
     if (city !== undefined && city !== '') {
       paramsObj.city = city;
+    }
+
+    if (onlyFriends) {
+      paramsObj.onlyFriends = onlyFriends;
     }
 
     if (role !== undefined && role !== '' && role !== 'none') {
@@ -64,7 +71,8 @@ function FindTrips() {
   };
 
   const handleFilterChange = (e) => {
-    const { name, value } = e.target;
+    const { name } = e.target;
+    const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
     setFilters((prev) => ({ ...prev, [name]: value }));
   };
 
@@ -150,6 +158,16 @@ function FindTrips() {
       </div>
 
       <div className={styles.filtersContainer}>
+        <div className={styles.filterContainer}>
+          <InputCheck
+            title="Solo conductores conocidos."
+            name="onlyFriends"
+            value={filters?.onlyFriends}
+            onChange={handleFilterChange}
+            className={styles.inputCheck}
+          />
+        </div>
+
         <div className={styles.filterContainer}>
           <InputSelect
             options={countries.map((country) => (
