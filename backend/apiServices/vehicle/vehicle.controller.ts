@@ -10,7 +10,7 @@ const createVehicleController = async (req: AppRequest, res: AppResponse) => {
 	if (!req.session) return;
   const {id } = req.session;
 	try {
-		const vehicle = await createVehicle({userId: id, type, identification, color, brand, model, year, relation: {since: parseDate(new Date()), stillOwner, price}})
+		const vehicle = await createVehicle({userId: id, type, identification, color, brand, model, year, relation: {since: parseDate(since), stillOwner, price}})
 
 		res.send(vehicle);
 	} catch (ex) {
