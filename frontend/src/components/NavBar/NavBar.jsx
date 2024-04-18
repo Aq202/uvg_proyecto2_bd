@@ -48,9 +48,9 @@ function NavBar({ handleNavBar }) {
           <div className={styles.section} onClick={() => handleNavBar('charts')}>
             <p>Dashboard</p>
           </div>
-          <div className={styles.section} onClick={() => handleNavBar('upload')}>
+          {/* <div className={styles.section} onClick={() => handleNavBar('upload')}>
             <p>Subir CSV</p>
-          </div>
+          </div> */}
         </div>
       </div>
     </div>
