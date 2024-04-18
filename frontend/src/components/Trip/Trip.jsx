@@ -12,7 +12,7 @@ import usePopUp from '../../hooks/usePopUp';
 import InputText from '../InputText';
 import InputNumber from '../InputNumber/InputNumber';
 import InputCheck from '../InputCheck/InputCheck';
-import { button, green } from '../../styles/buttons.module.css';
+import { button, green, red } from '../../styles/buttons.module.css';
 
 function Trip({
   id,
@@ -40,7 +40,9 @@ function Trip({
 }) {
   const { callFetch: joinRide, result: resultPost, loading: loadingPost } = useFetch();
   const { callFetch: acceptRequest, result: resultAccept, loading: loadingAccept } = useFetch();
+  const { callFetch: removePassenger, result: resultRemove, loading: loadingRemove } = useFetch();
   const { callFetch: acceptAll, result: resultAcceptAll, loading: loadingAcceptAll } = useFetch();
+  const { callFetch: removeAll, result: resultRemoveAll, loading: loadingRemoveAll } = useFetch();
   const { callFetch: submitRating, result: resultRating, loading: loadingRating } = useFetch();
   const { callFetch: submitComment, result: resultComment, loading: loadingComment } = useFetch();
   const { callFetch: submitStart, result: resultStart, loading: loadingStart } = useFetch();
@@ -55,6 +57,7 @@ function Trip({
   const token = useToken();
   const [isJoinOpen, openJoin, closeJoin] = usePopUp();
   const [isRequestsOpen, openRequests, closeRequests] = usePopUp();
+  const [isPassengersOpen, openPassengers, closePassengers] = usePopUp();
   const [isRatingOpen, openRating, closeRating] = usePopUp();
   const [isCommentOpen, openComment, closeComment] = usePopUp();
   const [isStartOpen, openStart, closeStart] = usePopUp();
@@ -186,11 +189,28 @@ function Trip({
     });
   };
 
+  const removePassengerFromTrip = (rideId, userId) => {
+    removePassenger({
+      uri: `${serverHost}/ride/${rideId}/assignment/${userId}`,
+      headers: { authorization: token },
+      method: 'DELETE',
+      parse: false,
+    });
+  };
+
   const assignAll = (rideId) => {
     acceptAll({
       uri: `${serverHost}/ride/${rideId}/assignAll`,
       headers: { authorization: token },
       method: 'POST',
+      parse: false,
+    });
+  };
+  const removeAllPassengers = (rideId) => {
+    removeAll({
+      uri: `${serverHost}/ride/${rideId}/allAssignments`,
+      headers: { authorization: token },
+      method: 'DELETE',
       parse: false,
     });
   };
@@ -257,10 +277,11 @@ function Trip({
   }, [resultPost]);
 
   useEffect(() => {
-    if (!resultAccept && !resultAcceptAll) return;
+    if (!resultAccept && !resultAcceptAll
+      && !resultRemove && !resultRemoveAll) return;
     closeRequests();
     callback();
-  }, [resultAccept, resultAcceptAll]);
+  }, [resultAccept, resultAcceptAll, resultRemove, resultRemoveAll]);
 
   useEffect(() => {
     if (!resultRating) return;
@@ -337,7 +358,7 @@ function Trip({
         </div>
         <div className={styles.infoBlock}>
           <p className={styles.infoTitle}>Pasajeros:</p>
-          <p className={styles.infoDescription}>{passengers}</p>
+          <p className={styles.infoDescription}>{passengers.length}</p>
         </div>
         <div className={styles.infoBlock}>
           <p className={styles.infoTitle}>Salida estimada:</p>
@@ -380,6 +401,7 @@ function Trip({
         <div className={styles.actionsContainer}>
           <DeleteIcon className={styles.deleteIcon} onClick={deleteTrip} />
           <Button text="Solicitudes de pasajeros" onClick={openRequests} disabled={loadingPost} />
+          <Button text="Retirar pasajeros" onClick={openPassengers} disabled={loadingPost} />
         </div>
       )}
       {!owner && completed && <Button className={styles.button} text="Calificar viaje" onClick={openRating} disabled={loadingPost} />}
@@ -433,6 +455,59 @@ function Trip({
               ))}
             {(!requests || !requests.some((request) => request.approved !== true)) && (
               <p>No tienes solicitudes pendientes</p>
+            )}
+          </div>
+        </PopUp>
+      )}
+      {isPassengersOpen && (
+        <PopUp close={closePassengers} closeWithBackground>
+          <div className={styles.requestPopup}>
+            <p className={styles.popUpTitle}>
+              Aquí puedes retirar pasajeros de tu viaje
+            </p>
+            {passengers && passengers.length > 0
+              && !passengers.some((passenger) => (
+                requests.find((request) => request.user.id === passenger.user.id)
+                  .approved === false))
+              && (
+                <div className={styles.requestContainerTitle}>
+                  <p className={styles.requestTitle}>Pasajero</p>
+                  <p className={styles.requestTitle}>Admisión</p>
+                  <button
+                    className={`${button} ${red} ${styles.acceptAll}`}
+                    type="button"
+                    onClick={() => removeAllPassengers(id)}
+                    disabled={loadingRemoveAll}
+                  >
+                    Retirar a todos
+                  </button>
+                </div>
+              )}
+            {!passengers.some((passenger) => (
+              requests.find((request) => request.user.id === passenger.user.id)
+                .approved === false))
+              && passengers
+                .map((passenger) => {
+                  const admision = requests.find((request) => request.user.id === passenger.user.id)
+                    .approved_date;
+                  const admisionDate = admision
+                    && admision !== null ? new Date(admision) : undefined;
+                  return (
+                    <div className={styles.requestContainer}>
+                      <p className={styles.requestName}>{passenger.user.name}</p>
+                      <p className={styles.requestMessage}>
+                        {`${admisionDate.getDay() < 10 ? '0' : ''}${admisionDate.getDay()}/${admisionDate.getMonth() < 10 ? '0' : ''}${admisionDate.getMonth()}/${admisionDate.getFullYear()} ${admisionDate.getHours() < 10 ? '0' : ''}${admisionDate.getHours()}:${admisionDate.getMinutes() < 10 ? '0' : ''}${admisionDate.getMinutes()}`}
+                      </p>
+                      <div className={styles.requestButtonsContainer}>
+                        <Button className={styles.requestButton} text="Retirar" onClick={() => removePassengerFromTrip(id, passenger.user.id)} disabled={loadingRemove} />
+                      </div>
+                    </div>
+                  );
+                })}
+            {(!passengers || passengers.some((passenger) => (
+              requests.find((request) => request.user.id === passenger.user.id)
+                .approved === false))) && (
+                <p>No tienes pasajeros</p>
             )}
           </div>
         </PopUp>
@@ -550,18 +625,6 @@ Trip.propTypes = {
   destinationName: PropTypes.string.isRequired,
   destinationAddress: PropTypes.string.isRequired,
   driver: PropTypes.string.isRequired,
-  passengers: PropTypes.number.isRequired,
-  startTime: PropTypes.string.isRequired,
-  arrivalTime: PropTypes.string.isRequired,
-  realStartTime: PropTypes.string,
-  realArrivalTime: PropTypes.string,
-  comment: PropTypes.string,
-  joined: PropTypes.bool.isRequired,
-  requested: PropTypes.bool.isRequired,
-  callback: PropTypes.func.isRequired,
-  owner: PropTypes.bool,
-  completed: PropTypes.bool.isRequired,
-  deleteTrip: PropTypes.bool.isRequired,
   requests: PropTypes.arrayOf(PropTypes.shape({
     user: PropTypes.shape({
       gender: PropTypes.string,
@@ -574,6 +637,26 @@ Trip.propTypes = {
     approved: PropTypes.string,
     message: PropTypes.string,
   })),
+  startTime: PropTypes.string.isRequired,
+  arrivalTime: PropTypes.string.isRequired,
+  realStartTime: PropTypes.string,
+  realArrivalTime: PropTypes.string,
+  comment: PropTypes.string,
+  joined: PropTypes.bool.isRequired,
+  requested: PropTypes.bool.isRequired,
+  callback: PropTypes.func.isRequired,
+  owner: PropTypes.bool,
+  completed: PropTypes.bool.isRequired,
+  deleteTrip: PropTypes.bool.isRequired,
+  passengers: PropTypes.arrayOf(PropTypes.shape({
+    user: PropTypes.shape({
+      gender: PropTypes.string,
+      phone: PropTypes.string,
+      name: PropTypes.string,
+      id: PropTypes.string,
+      email: PropTypes.string,
+    }),
+  })),
   started: PropTypes.bool.isRequired,
 };
 
@@ -583,6 +666,7 @@ Trip.defaultProps = {
   realStartTime: '',
   comment: '',
   requests: null,
+  passengers: null,
 };
 
 export default Trip;

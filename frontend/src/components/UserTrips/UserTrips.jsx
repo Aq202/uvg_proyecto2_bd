@@ -382,7 +382,7 @@ function UserTrips() {
               originAddress={trip.startLocation.address}
               destinationName={trip.arrivalLocation.name}
               destinationAddress={trip.arrivalLocation.address}
-              passengers={trip.passengers ? trip.passengers.length : 0}
+              passengers={trip.passengers ? trip.passengers : []}
               startTime={typeof (trip.date) === 'string' ? `${trip.date}, ${trip.start}` : readDate(trip.start)}
               arrivalTime={typeof (trip.date) === 'string' ? `${trip.date}, ${trip.arrival}` : readDate(trip.arrival)}
               realStartTime={trip.startLocation.realStartTime ? readDate(trip.startLocation.realStartTime) : ''}
