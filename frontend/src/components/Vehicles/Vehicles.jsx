@@ -80,7 +80,6 @@ function Vehicles() {
     if (errors.length > 0) {
       generalError = 'Debe corregir los errores primero.';
     } else {
-      console.log(newVehicle);
       try {
         addVehicle({
           uri: `${serverHost}/vehicle`,
@@ -171,8 +170,6 @@ function Vehicles() {
       setErrors((lastVal) => ({ ...lastVal, since: 'La fecha no es válida' }));
     }
   };
-
-  console.log('vehiclesData', vehiclesData);
 
   return (
     <div className={styles.mainContainer}>
