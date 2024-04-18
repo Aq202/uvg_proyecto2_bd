@@ -120,8 +120,6 @@ function Places() {
     openTime,
     closeTime,
     parking,
-    urbanArea,
-    dangerArea,
   ) => {
     setPlaceToEdit({
       idLocation: id,
@@ -130,8 +128,6 @@ function Places() {
       openTime,
       closeTime,
       parking,
-      urbanArea,
-      dangerArea,
     });
   };
 
@@ -240,6 +236,7 @@ function Places() {
 
   useEffect(() => {
     if (resultGet) {
+      console.log(resultGet);
       setPlaces(resultGet);
     }
   }, [resultGet]);
@@ -316,10 +313,7 @@ function Places() {
                 place.address,
                 place.openTime,
                 place.closeTime,
-                place.distanceFromCityCenter,
                 place.parking,
-                place.urbanArea,
-                place.dangerArea,
               )}
             />
           ))}
@@ -375,20 +369,6 @@ function Places() {
               value={placeToEdit.parking}
               checked={placeToEdit.parking}
               onChange={handleEditFormChange}
-            />
-            <InputCheck
-              title="El lugar se encuentra en una zona roja"
-              name="dangerArea"
-              value={placeToEdit.dangerArea}
-              checked={placeToEdit.dangerArea}
-              onChange={handleCreateFormChange}
-            />
-            <InputCheck
-              title="El lugar se encuentra en un área urbana"
-              name="urbanArea"
-              value={placeToEdit.urbanArea}
-              checked={placeToEdit.urbanArea}
-              onChange={handleCreateFormChange}
             />
             <Button text="Actualizar" className={styles.updateButton} onClick={updateLocation} disabled={loadingPut} />
           </div>
