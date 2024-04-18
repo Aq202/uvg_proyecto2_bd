@@ -2,7 +2,6 @@
 import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import { FiEdit as EditIcon } from 'react-icons/fi';
-import { RiDeleteBin6Line as DeleteIcon } from 'react-icons/ri';
 import { MdAddHome, MdOutlineCancel } from 'react-icons/md';
 import { FaHome } from 'react-icons/fa';
 import styles from './Place.module.css';
@@ -26,7 +25,6 @@ function Place({
   openTime,
   closeTime,
   editPlace,
-  deletePlace,
   refetch,
   hasHome,
   homeId,
@@ -94,7 +92,10 @@ function Place({
     setShowHouse(false);
   };
 
-  useEffect(() => { refetch(); }, [resultHome]);
+  useEffect(() => {
+    if (!resultHome) return;
+    refetch();
+  }, [resultHome, refetch]);
 
   return (
     <div className={styles.placeContainer}>
@@ -125,7 +126,6 @@ function Place({
           </p>
         </div>
         <EditIcon className={styles.editIcon} onClick={editPlace} />
-        <DeleteIcon className={styles.deleteIcon} onClick={deletePlace} />
       </div>
       {error && <div className={styles.errorMessage}>{error?.message ?? 'Ocurrió un error.'}</div>}
       {showHouse && !loading && (
@@ -202,7 +202,6 @@ Place.propTypes = {
   openTime: PropTypes.string.isRequired,
   closeTime: PropTypes.string.isRequired,
   editPlace: PropTypes.func.isRequired,
-  deletePlace: PropTypes.func.isRequired,
   id: PropTypes.string.isRequired,
   refetch: PropTypes.func,
   right: PropTypes.bool,

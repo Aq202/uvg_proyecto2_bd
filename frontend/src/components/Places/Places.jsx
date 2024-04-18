@@ -20,7 +20,7 @@ import useSessionData from '../../hooks/useSessionData';
 function Places() {
   const token = useToken();
   const [userData, setUserdata] = useState(useSessionData());
-  const hasHome = userData?.home?.id !== null || undefined;
+  const hasHome = userData?.home?.id !== null && userData?.home?.id !== undefined;
   const [filters, setFilters] = useState({});
   const [places, setPlaces] = useState([]);
   const [currentPage, setCurrentPage] = useState(0);
@@ -43,7 +43,6 @@ function Places() {
   } = useFetch();
   const { callFetch: putLocation, result: resultPut, loading: loadingPut } = useFetch();
   const { callFetch: postLocation, result: resultPost, loading: loadingPost } = useFetch();
-  const { callFetch: deleteLocation, result: resultDelete } = useFetch();
   const { callFetch: fetchCities, result: resultCities } = useFetch();
   const [cities, setCities] = useState([]);
 
@@ -172,15 +171,6 @@ function Places() {
     });
   };
 
-  const deletePlace = (placeId) => {
-    deleteLocation({
-      uri: `${serverHost}/location/${placeId}`,
-      headers: { authorization: token },
-      method: 'DELETE',
-      parse: false,
-    });
-  };
-
   const createLocation = () => {
     let hasError = false;
 
@@ -204,6 +194,7 @@ function Places() {
   };
 
   const refreshPlaces = () => {
+    getUser();
     setPlaces([]);
     setFilters({});
     closeEdit();
@@ -243,11 +234,11 @@ function Places() {
   }, [currentPage, filters]);
 
   useEffect(() => {
-    if (!resultPut && !resultDelete && !resultPost) return;
+    if (!resultPut && !resultPost) return;
     closeCreate();
     closeEdit();
     refreshPlaces();
-  }, [resultPut, resultDelete, resultPost]);
+  }, [resultPut, resultPost]);
 
   useEffect(() => {
     setErrors({});
@@ -292,8 +283,8 @@ function Places() {
         <div className={styles.placesContainer}>
           {places?.map((place, index) => (
             <Place
-              hasHome={hasHome}
-              homeId={userData?.home?.id}
+              hasHome={hasHome || undefined}
+              homeId={userData?.home?.id || undefined}
               right={index % 2 === 0}
               location={`${place.city.name}, ${place.city.country}`}
               name={place.name}
@@ -301,7 +292,7 @@ function Places() {
               parking={place.parking}
               openTime={place.openTime}
               closeTime={place.closeTime}
-              refetch={() => refreshPlaces}
+              refetch={refreshPlaces}
               id={place.id}
               editPlace={() => editPlace(
                 place.id,
@@ -311,7 +302,6 @@ function Places() {
                 place.closeTime,
                 place.parking,
               )}
-              deletePlace={() => deletePlace(place.id)}
             />
           ))}
         </div>
