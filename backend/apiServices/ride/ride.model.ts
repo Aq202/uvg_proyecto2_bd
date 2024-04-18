@@ -4,6 +4,7 @@ import CustomError from "../../utils/customError.js";
 import Connection from "../../db_neo4j/connection.js";
 import generateId from "../../utils/generateId.js";
 import exists from "../../utils/exists.js";
+import parseDate from "../../utils/parseDate.js";
 
 const createRide = async ({
 	idStartLocation,
@@ -213,7 +214,7 @@ const assignUserToRide = async ({
 			idUser,
 			idRide,
 			sessionIdUser,
-			date: new Date().toString()
+			date: parseDate(new Date())
 		}
 	);
 
@@ -306,7 +307,7 @@ const createRideRequest = async ({
 			idUser,
 			idRide,
 			message,
-			date: new Date().toString(),
+			date: parseDate(new Date())
 		}
 	);
 
@@ -401,7 +402,7 @@ const startRide = async ({
 			idRide,
 			wantsToTalk,
 			inAHurry,
-			realStartTime: new Date().toString(),
+			realStartTime: parseDate(new Date()),
 			waitTime,
 			comment,
 		}
@@ -435,7 +436,7 @@ const finishRide = async ({
 		{
 			idUser,
 			idRide,
-			arrivalTime: new Date().toString(),
+			arrivalTime: parseDate(new Date()),
 			onTime,
 			comment,
 		}

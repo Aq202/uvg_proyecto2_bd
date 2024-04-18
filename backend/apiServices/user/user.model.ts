@@ -6,6 +6,7 @@ import CustomError from "../../utils/customError.js";
 import exists, { someExists } from "../../utils/exists.js";
 import generateId from "../../utils/generateId.js";
 import { createUserDto, createMultipleUsersDto } from "./user.dto.js";
+import parseDate from "../../utils/parseDate.js";
 
 const createManyUsers = async (
 	users: { name: string; email: string; phone: string; password: string }[]
@@ -195,7 +196,7 @@ const addFriend = async ({
 			idUser2,
 			relation,
 			closeLevel,
-			since: new Date().toString(),
+			since: parseDate(new Date()),
 		}
 	);
 	if (result.records.length === 0)
