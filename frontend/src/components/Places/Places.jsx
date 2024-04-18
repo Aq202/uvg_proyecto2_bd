@@ -25,7 +25,7 @@ function Places() {
   const [places, setPlaces] = useState([]);
   const [currentPage, setCurrentPage] = useState(0);
   const [isEditOpen, openEdit, closeEdit] = usePopUp();
-  const [placeToEdit, setPlaceToEdit] = useState({});
+  const [placeToEdit, setPlaceToEdit] = useState(false);
   const [placeToCreate, setPlaceToCreate] = useState(
     { parking: false, dangerArea: false, urbanArea: false },
   );
