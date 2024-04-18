@@ -43,6 +43,15 @@
     margin-top: 16px;
 }
 
+.inputCheck{
+    margin: 0;
+    font-size: 13px;
+    align-items: center;
+    width: fit-content;
+    min-width: 250px;
+    justify-content: end;
+}
+
 @media (max-aspect-ratio: 1/1) {
     .filtersContainer {
         margin-left: 0;
