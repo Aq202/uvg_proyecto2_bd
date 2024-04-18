@@ -65,10 +65,11 @@ function Vehicles() {
   }, [resultAdd]);
 
   useEffect(() => {
-    if (resultGetVehicles) {
-      setVehiclesData(resultGetVehicles);
+    if (resultGetVehicles || error?.status !== 404) {
+      if (resultGetVehicles) setVehiclesData(resultGetVehicles);
+      else setVehiclesData([]);
     }
-  }, [resultGetVehicles]);
+  }, [resultGetVehicles, error]);
 
   const handleAddVehicle = () => {
     setAddingVehicle(true);
@@ -79,6 +80,7 @@ function Vehicles() {
     if (errors.length > 0) {
       generalError = 'Debe corregir los errores primero.';
     } else {
+      console.log(newVehicle);
       try {
         addVehicle({
           uri: `${serverHost}/vehicle`,
@@ -170,14 +172,16 @@ function Vehicles() {
     }
   };
 
+  console.log('vehiclesData', vehiclesData);
+
   return (
     <div className={styles.mainContainer}>
       <div className={styles.headerSection}>
         <p className={styles.title}>Mis Vehículos</p>
       </div>
       {loading && <Spinner />}
-      {(error || vehiclesData === undefined) && <div className={styles.errorMessage}>{error?.message ?? 'Ocurrió un error.'}</div>}
-      {!loading && !error && vehiclesData !== undefined && (
+      {(error || vehiclesData === undefined) && error?.status !== 404 && <div className={styles.errorMessage}>{error?.message ?? 'Ocurrió un error.'}</div>}
+      {!loading && (!error || !(error?.status !== 404)) && vehiclesData !== undefined && (
         <div className={styles.vehiclesContainer}>
           <table style={{ width: addingVehicle ? '80%' : '60%' }}>
             <tbody>
