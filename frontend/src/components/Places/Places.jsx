@@ -25,7 +25,7 @@ function Places() {
   const [places, setPlaces] = useState([]);
   const [currentPage, setCurrentPage] = useState(0);
   const [isEditOpen, openEdit, closeEdit] = usePopUp();
-  const [placeToEdit, setPlaceToEdit] = useState(false);
+  const [placeToEdit, setPlaceToEdit] = useState({});
   const [placeToCreate, setPlaceToCreate] = useState(
     { parking: false, dangerArea: false, urbanArea: false },
   );
@@ -114,9 +114,25 @@ function Places() {
     return true;
   };
 
-  const editPlace = (id, name, address, openTime, closeTime, parking) => {
+  const editPlace = (
+    id,
+    name,
+    address,
+    openTime,
+    closeTime,
+    parking,
+    urbanArea,
+    dangerArea,
+  ) => {
     setPlaceToEdit({
-      idLocation: id, name, address, openTime, closeTime, parking,
+      idLocation: id,
+      name,
+      address,
+      openTime,
+      closeTime,
+      parking,
+      urbanArea,
+      dangerArea,
     });
   };
 
@@ -309,7 +325,10 @@ function Places() {
                 place.address,
                 place.openTime,
                 place.closeTime,
+                place.distanceFromCityCenter,
                 place.parking,
+                place.urbanArea,
+                place.dangerArea,
               )}
               deletePlace={() => deletePlace(place.id)}
             />
@@ -363,8 +382,23 @@ function Places() {
             <InputCheck
               title="El lugar cuenta con parqueo"
               name="parking"
-              value={placeToCreate.parking}
+              value={placeToEdit.parking}
+              checked={placeToEdit.parking}
               onChange={handleEditFormChange}
+            />
+            <InputCheck
+              title="El lugar se encuentra en una zona roja"
+              name="dangerArea"
+              value={placeToEdit.dangerArea}
+              checked={placeToEdit.dangerArea}
+              onChange={handleCreateFormChange}
+            />
+            <InputCheck
+              title="El lugar se encuentra en un área urbana"
+              name="urbanArea"
+              value={placeToEdit.urbanArea}
+              checked={placeToEdit.urbanArea}
+              onChange={handleCreateFormChange}
             />
             <Button text="Actualizar" className={styles.updateButton} onClick={updateLocation} disabled={loadingPut} />
           </div>
